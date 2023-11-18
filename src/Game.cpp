@@ -16,11 +16,17 @@ void Game::initWindow() {
     this->window = new sf::RenderWindow(this->videoMode, "AirportIncursion", sf::Style::Titlebar | sf::Style::Close);
 }
 
+void Game::initBackground() {
+    mainBackground.loadFromFile("../../src/sprites/mainBackGround.jpg");
+    background.setTexture(mainBackground);
+}
+
 // Constructors and destructors
 
 Game::Game() {
     this->initVars();
     this->initWindow();
+    this->initBackground();
 }
 
 Game::~Game(){
@@ -49,14 +55,22 @@ void Game::pollEvents() {
     }
 }
 
+void Game::updateMousePos() {
+    this->mousePos = sf::Mouse::getPosition(*window);
+    this->mousePosView = this->window->mapPixelToCoords(this->mousePos);
+}
+
 void Game::update() {
     this->pollEvents();
+
+    this->updateMousePos();
 }
 
 void Game::render() {
     this->window->clear();
 
     // render objects
+    this->window->draw(background);
 
     this->window->display();
 }
