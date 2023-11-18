@@ -15,10 +15,19 @@ private:
     sf::RenderWindow *window;
     sf::VideoMode videoMode;
     sf::Event ev;
+    sf::Texture mainBackground;
+
+    // Mouse position
+    sf::Vector2i mousePos;
+    sf::Vector2f mousePosView;
+
+    // Game Objects
+    sf::Sprite background;
 
     // Private functions
     void initVars();
     void initWindow();
+    void initBackground();
 
 public:
 
@@ -32,6 +41,7 @@ public:
     // Functions
 
     void pollEvents();
+    void updateMousePos();
     void update();
     void render();
 };
