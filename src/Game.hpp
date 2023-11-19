@@ -5,10 +5,7 @@
 #ifndef GAME_PROJECT_GAME_HPP
 #define GAME_PROJECT_GAME_HPP
 
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
-
+#include "Player.h"
 
 class Game {
 private:
@@ -17,12 +14,9 @@ private:
     sf::Event ev;
     sf::Texture mainBackground;
 
-    // Mouse position
-    sf::Vector2i mousePos;
-    sf::Vector2f mousePosView;
-
     // Game Objects
     sf::Sprite background;
+    Player player;
 
     // Private functions
     void initVars();
@@ -41,7 +35,6 @@ public:
     // Functions
 
     void pollEvents();
-    void updateMousePos();
     void update();
     void render();
 };

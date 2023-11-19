@@ -14,6 +14,8 @@ void Game::initWindow() {
     this->videoMode.width = 800;
 
     this->window = new sf::RenderWindow(this->videoMode, "AirportIncursion", sf::Style::Titlebar | sf::Style::Close);
+
+    this->window->setFramerateLimit(144);
 }
 
 void Game::initBackground() {
@@ -55,22 +57,18 @@ void Game::pollEvents() {
     }
 }
 
-void Game::updateMousePos() {
-    this->mousePos = sf::Mouse::getPosition(*window);
-    this->mousePosView = this->window->mapPixelToCoords(this->mousePos);
-}
-
 void Game::update() {
     this->pollEvents();
 
-    this->updateMousePos();
+    this->player.update(this->window);
 }
 
 void Game::render() {
     this->window->clear();
 
     // render objects
-    this->window->draw(background);
+    this->player.render(this->window);
+//    this->window->draw(background);
 
     this->window->display();
 }
