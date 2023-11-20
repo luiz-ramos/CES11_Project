@@ -10,10 +10,10 @@ int main()
     while (game.running()){
 
         // update
-        game.update();
+        game.updateGame();
 
         // render
-        game.render();
+        game.renderGame();
     }
 
     return 0;

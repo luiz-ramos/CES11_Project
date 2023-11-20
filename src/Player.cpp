@@ -8,56 +8,18 @@
 
 // Private functions
 
-void Player::initVars() {
-    this->health = 100;
-
-    this->movementSpeed = 5.f;
-}
-
-void Player::initTexture() {
-    textures = new std::vector<sf::Texture>;
-    std::string path = "../../src/sprites/marine";
-
-    // Save all character sprites into a vector
-
-    for (const auto &entry : std::filesystem::directory_iterator(path)){
-        sf::Texture fileTexture;
-        fileTexture.loadFromFile(entry.path().string());
-        this->textures->push_back(fileTexture);
-    }
-
-    // Set initial sprite
-
-    current = 1;
-
-    this->player.setTexture(textures->at(current));
-    this->player.setScale(2,2);
-
-    // Gun texture
-    this->gunTexture.loadFromFile("../../src/sprites/gun/m16_gl_fire_001.png");
-    this->gun.setTexture(this->gunTexture);
-    this->gun.setScale(2,2);
-    this->gun.setRotation(90.f);
-}
-
 void Player::loadTexture() {
-    this->player.setTexture(textures->at(this->current));
+    this->character.setTexture(characterTextures->at(this->current));
 }
 
 // Constructors and Destructors
 
-Player::Player(float x, float y) {
-
-    this->player.setPosition(x,y);
-    this->gun.setPosition(x,y);
-    this->gun.move(this->player.getGlobalBounds().width/2, this->player.getGlobalBounds().height/2);
-
-    this->initVars();
-    this->initTexture();
+Player::Player(int playerID, int gunId, float x, float y) : Character(playerID, gunId, x, y){
+    movementSpeed = 3.f;
 }
 
 Player::~Player() {
-    delete textures;
+    delete characterTextures;
 }
 
 // Functions
@@ -68,18 +30,16 @@ void Player::updateInput() {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) ||
         sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
 
-        this->player.move(-this->movementSpeed, 0.f);
+        this->character.move(-this->movementSpeed, 0.f);
         this->current = 6;
-        this->player.setScale(2,2);
         this->loadTexture();
         check = true;
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) ||
              sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
 
-        this->player.move(this->movementSpeed, 0.f);
+        this->character.move(this->movementSpeed, 0.f);
         this->current = 7;
-        this->player.setScale(2,2);
         this->loadTexture();
         check = true;
     }
@@ -88,26 +48,34 @@ void Player::updateInput() {
         sf::Keyboard::isKeyPressed(sf::Keyboard::Up)){
 
         if (check){
-            this->player.move(this->movementSpeed, 0.f);
+            float change = 1 - 0.5 * sqrt(2);
+            int i = pow(-1, current % 2);
+            this->character.move(i * change * movementSpeed, 0.f);
         }
-        this->player.move(0.f, -this->movementSpeed);
+        this->character.move(0.f, -this->movementSpeed);
         this->current = 4;
-        this->player.setScale(2,2);
         this->loadTexture();
         check = true;
     }
     else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) ||
              sf::Keyboard::isKeyPressed(sf::Keyboard::Down)){
 
-        this->player.move(0.f, this->movementSpeed);
+        if (check){
+            float change = 1 - 0.5 * sqrt(2);
+            int i = pow(-1, current % 2);
+            this->character.move(i * change * movementSpeed, 0.f);
+        }
+        this->character.move(0.f, this->movementSpeed);
         this->current = 5;
-        this->player.setScale(2,2);
         this->loadTexture();
         check = true;
     }
 
     if (!check && current > 3)
-        current-=4;
+        current -= 4;
+
+    shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
+                       this->character.getGlobalBounds().top + 4 * this->character.getGlobalBounds().height/5);
 }
 
 void Player::updateMousePos(const sf::RenderWindow *target) {
@@ -116,9 +84,9 @@ void Player::updateMousePos(const sf::RenderWindow *target) {
 }
 
 void Player::updateGun() {
-    this->gun.setPosition(this->player.getGlobalBounds().left,this->player.getGlobalBounds().top);
+    this->gun.setPosition(this->character.getGlobalBounds().left,this->character.getGlobalBounds().top);
 
-    sf::Vector2f dir = mousePosView - this->player.getPosition();
+    sf::Vector2f dir = mousePosView - this->character.getPosition();
     float x = dir.x;
     float y = dir.y;
 
@@ -130,18 +98,31 @@ void Player::updateGun() {
 
     float angle = acos(x) * 180/PI;
 
-    if (y < 0)
+    if (y <= 0)
         this->gun.setRotation(-angle);
     else
         this->gun.setRotation(angle);
 
-    this->gun.move(this->player.getGlobalBounds().width/4, this->player.getGlobalBounds().height/2);
+    this->gun.move(this->character.getGlobalBounds().width/4, this->character.getGlobalBounds().height/2);
+}
+
+void Player::updateCollisions(const sf::RenderTarget * target) {
+    sf::FloatRect playerBounds = this->character.getGlobalBounds();
+
+    if (playerBounds.left <= 45.f)
+        this->character.setPosition(45.f, playerBounds.top);
+
+    else if (playerBounds.left + playerBounds.width >= target->getSize().x - 45.f)
+        this->character.setPosition(target->getSize().x - playerBounds.width - 45.f, playerBounds.top);
+
+    if (playerBounds.top <= 45.f)
+        this->character.setPosition(playerBounds.left, 45.f);
+
+    else if (playerBounds.top + playerBounds.height >= target->getSize().y - 45.f)
+        this->character.setPosition(playerBounds.left, target->getSize().y - playerBounds.height - 45.f);
 }
 
 void Player::update(const sf::RenderWindow * target) {
-
-
-    // Bounds collision
 
     // Keyboard input
     updateInput();
@@ -151,9 +132,7 @@ void Player::update(const sf::RenderWindow * target) {
 
     // Gun direction
     updateGun();
-}
 
-void Player::render(sf::RenderTarget *target) {
-    target->draw(this->player);
-    target->draw(this->gun);
+    // Collisions
+    updateCollisions(target);
 }

@@ -7,21 +7,22 @@
 
 #include "Player.h"
 
-class Game {
+class Game : public Player {
 private:
     sf::RenderWindow *window;
     sf::VideoMode videoMode;
     sf::Event ev;
     sf::Texture mainBackground;
+    int bulletSpeed = 5.f;
 
     // Game Objects
     sf::Sprite background;
-    Player player;
+    std::vector<sf::Sprite> * bullets;
 
     // Private functions
-    void initVars();
+    void initGameVars();
     void initWindow();
-    void initBackground();
+    void initTextures();
 
 public:
 
@@ -35,8 +36,10 @@ public:
     // Functions
 
     void pollEvents();
-    void update();
-    void render();
+    void updateGame();
+    void updateBullets();
+    bool bulletCheckCollisions(sf::Sprite * bullet);
+    void renderGame();
 };
 
 

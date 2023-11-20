@@ -3,36 +3,39 @@
 //
 
 #include "Game.hpp"
+#define PI 3.14159265
 
 // Private functions
-void Game::initVars() {
+void Game::initGameVars() {
     this->window = nullptr;
+    this->bullets = new std::vector<sf::Sprite>;
 }
 
 void Game::initWindow() {
-    this->videoMode.height = 600;
-    this->videoMode.width = 800;
+    this->videoMode.height = 728;
+    this->videoMode.width = 728;
 
     this->window = new sf::RenderWindow(this->videoMode, "AirportIncursion", sf::Style::Titlebar | sf::Style::Close);
 
     this->window->setFramerateLimit(144);
 }
 
-void Game::initBackground() {
-    mainBackground.loadFromFile("../../src/sprites/mainBackGround.jpg");
+void Game::initTextures() {
+    mainBackground.loadFromFile("../../src/sprites/mapaResenha.jpg");
     background.setTexture(mainBackground);
 }
 
 // Constructors and destructors
 
-Game::Game() {
-    this->initVars();
+Game::Game() : Player(0,0,364,364){
+    this->initGameVars();
     this->initWindow();
-    this->initBackground();
+    this->initTextures();
 }
 
 Game::~Game(){
     delete this->window;
+    delete this->bullets;
 }
 
 // Accessors
@@ -53,22 +56,74 @@ void Game::pollEvents() {
                 if (this->ev.key.code == sf::Keyboard::Escape)
                     this->window->close();
                 break;
+            case sf::Event::MouseButtonPressed:
+                if (ev.mouseButton.button == sf::Mouse::Left){
+                    sf::Sprite bullet;
+                    float angle = this->getGun().getRotation();
+                    bullet.setTexture(this->getBulletTexture());
+                    bullet.setScale(2,2);
+                    bullet.setPosition(this->getGun().getPosition());
+                    bullet.setRotation(angle);
+                    angle = angle * PI/180;
+                    bullet.move(60 * cos(angle), 60 * sin(angle));
+
+                    this->bullets->push_back(bullet);
+                }
+                break;
         }
     }
 }
 
-void Game::update() {
-    this->pollEvents();
+bool Game::bulletCheckCollisions(sf::Sprite * bullet) {
+    sf::FloatRect playerBounds = bullet->getGlobalBounds();
 
-    this->player.update(this->window);
+    if (playerBounds.left <= 0.f)
+        return true;
+
+    else if (playerBounds.left + playerBounds.width >= window->getSize().x)
+        return true;
+
+    if (playerBounds.top <= 0.f)
+        return true;
+
+    else if (playerBounds.top + playerBounds.height >= window->getSize().y)
+        return true;
+
+    return false;
 }
 
-void Game::render() {
+void Game::updateBullets() {
+    auto itr = this->bullets->begin();
+
+    for (itr; itr < bullets->end(); itr++){
+        sf::Sprite * bullet = &*itr;
+        float angle = (*bullet).getRotation() * PI/180;
+
+//        if (bulletCheckCollisions(bullet))
+//            bullets->erase(itr);
+
+        (*bullet).move(bulletSpeed * cos(angle), bulletSpeed * sin(angle));
+    }
+}
+
+void Game::updateGame() {
+    this->pollEvents();
+
+    this->updateBullets();
+
+    this->update(this->window);
+}
+
+void Game::renderGame() {
     this->window->clear();
 
     // render objects
-    this->player.render(this->window);
-//    this->window->draw(background);
+    this->window->draw(background);
+    this->render(this->window);
+    auto itr = this->bullets->begin();
+
+    for (itr; itr < bullets->end(); itr++)
+        this->window->draw(*itr);
 
     this->window->display();
 }
