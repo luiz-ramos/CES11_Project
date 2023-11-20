@@ -7,13 +7,11 @@
 
 
 // Private functions
-
 void Player::loadTexture() {
     this->character.setTexture(characterTextures->at(this->current));
 }
 
 // Constructors and Destructors
-
 Player::Player(int playerID, int gunId, float x, float y) : Character(playerID, gunId, x, y){
     movementSpeed = 3.f;
 }
@@ -23,7 +21,6 @@ Player::~Player() {
 }
 
 // Functions
-
 void Player::updateInput() {
     bool check = false;
 
@@ -78,11 +75,6 @@ void Player::updateInput() {
                        this->character.getGlobalBounds().top + 4 * this->character.getGlobalBounds().height/5);
 }
 
-void Player::updateMousePos(const sf::RenderWindow *target) {
-    this->mousePos = sf::Mouse::getPosition(*target);
-    this->mousePosView = target->mapPixelToCoords(this->mousePos);
-}
-
 void Player::updateCollisions(const sf::RenderTarget * target) {
     sf::FloatRect playerBounds = this->character.getGlobalBounds();
 
@@ -99,16 +91,13 @@ void Player::updateCollisions(const sf::RenderTarget * target) {
         this->character.setPosition(playerBounds.left, target->getSize().y - playerBounds.height - 45.f);
 }
 
-void Player::update(const sf::RenderWindow * target) {
+void Player::update(const sf::RenderWindow * target, sf::Vector2f gunTarget) {
 
     // Keyboard input
     this->updateInput();
 
-    // Mouse Positions
-    this->updateMousePos(target);
-
     // Gun direction
-    this->updateGun(mousePosView);
+    this->updateGun(gunTarget);
 
     // Collisions
     updateCollisions(target);

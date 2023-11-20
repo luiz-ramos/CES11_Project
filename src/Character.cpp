@@ -79,8 +79,16 @@ sf::Sprite Character::getGun() const &{
     return gun;
 }
 
+sf::Sprite Character::getCharacter() const &{
+    return character;
+}
+
 sf::Texture Character::getBulletTexture() const &{
     return bulletTexture;
+}
+
+int Character::getHealth() const &{
+    return health;
 }
 
 // Functions
@@ -130,7 +138,7 @@ void Character::bulletCollision(std::vector<sf::Sprite> *bullets) {
     }
 }
 
-void Character::upgrade(int healthUp, int damageUp) {
+void Character::updateStats(int healthUp, int damageUp) {
     health += healthUp;
     damage += damageUp;
 }

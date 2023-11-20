@@ -8,7 +8,13 @@
 #include "Player.h"
 #include "Enemy.h"
 
-class Game : public Player {
+struct Tree{
+    int value;
+    Tree * lchild;
+    Tree * rchild;
+};
+
+class Game {
 private:
     sf::RenderWindow *window;
     sf::VideoMode videoMode;
@@ -17,19 +23,43 @@ private:
     int bulletSpeed = 5.f;
 
     // Game state
-    int state;
+    /*
+     * state = 0 : character creation
+     * state = 1 : map navigation
+     * state = 2 : level
+     */
+    Tree * statsTree;
+    bool characterChoice;
+    bool gunChoice;
 
     // Game Objects
+    Player * player;
+    Enemy * firstEnemy;
+
+    // Mouse position
+    sf::Vector2i mousePos;
+    sf::Vector2f mousePosView;
+
+    // Sprites
     sf::Sprite background;
+    sf::RectangleShape outline;
     std::vector<sf::Sprite> * playerBullets;
     std::vector<sf::Sprite> * enemyBullets;
-    Enemy * firstEnemy;
+    std::vector<sf::Texture> * mugshots;
+
+    // Fonts
+    sf::Font font;
+    sf::Text text;
 
     // Private functions
     void initGameVars();
     void initWindow();
     void initTextures();
-
+    void initFont();
+    void displayChars(const std::string path, int scale);
+    void setOutline();
+    void setCharacter();
+    void updateMousePos();
 public:
 
     // Constructor and destructor

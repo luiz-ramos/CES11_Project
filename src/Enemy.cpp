@@ -27,7 +27,7 @@ sf::Sprite Enemy::getCharSprite() const &{
 
 // Functions
 void Enemy::shootCycle(std::vector<sf::Sprite> * bullets) {
-    if (timer == 30){
+    if (timer == 30 && health > 0){
         this->fireGun(bullets);
         timer = 0;
     }
