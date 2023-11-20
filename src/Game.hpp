@@ -6,6 +6,7 @@
 #define GAME_PROJECT_GAME_HPP
 
 #include "Player.h"
+#include "Enemy.h"
 
 class Game : public Player {
 private:
@@ -15,9 +16,14 @@ private:
     sf::Texture mainBackground;
     int bulletSpeed = 5.f;
 
+    // Game state
+    int state;
+
     // Game Objects
     sf::Sprite background;
-    std::vector<sf::Sprite> * bullets;
+    std::vector<sf::Sprite> * playerBullets;
+    std::vector<sf::Sprite> * enemyBullets;
+    Enemy * firstEnemy;
 
     // Private functions
     void initGameVars();
@@ -39,6 +45,7 @@ public:
     void updateGame();
     void updateBullets();
     bool bulletCheckCollisions(sf::Sprite * bullet);
+    void renderVector(std::vector<sf::Sprite> * spriteVector);
     void renderGame();
 };
 

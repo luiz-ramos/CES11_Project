@@ -45,7 +45,12 @@ public:
     sf::Sprite getGun() const&;
     sf::Texture getBulletTexture() const&;
 
+
+    // Functions
     void upgrade(int healthUp, int damageUp);
+    void updateGun(sf::Vector2f target);
+    void fireGun(std::vector<sf::Sprite> * bullets);
+    void bulletCollision(std::vector<sf::Sprite> * bullets);
     void render(sf::RenderTarget * target);
 };
 

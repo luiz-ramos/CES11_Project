@@ -8,7 +8,8 @@
 // Private functions
 void Game::initGameVars() {
     this->window = nullptr;
-    this->bullets = new std::vector<sf::Sprite>;
+    this->playerBullets = new std::vector<sf::Sprite>;
+    this->enemyBullets = new std::vector<sf::Sprite>;
 }
 
 void Game::initWindow() {
@@ -27,15 +28,18 @@ void Game::initTextures() {
 
 // Constructors and destructors
 
-Game::Game() : Player(0,0,364,364){
+Game::Game() : Player(1,0,364,364){
     this->initGameVars();
     this->initWindow();
     this->initTextures();
+
+    firstEnemy = new Enemy(0, 0, 1, 600, 600);
 }
 
 Game::~Game(){
     delete this->window;
-    delete this->bullets;
+    delete this->playerBullets;
+    delete this->enemyBullets;
 }
 
 // Accessors
@@ -57,18 +61,8 @@ void Game::pollEvents() {
                     this->window->close();
                 break;
             case sf::Event::MouseButtonPressed:
-                if (ev.mouseButton.button == sf::Mouse::Left){
-                    sf::Sprite bullet;
-                    float angle = this->getGun().getRotation();
-                    bullet.setTexture(this->getBulletTexture());
-                    bullet.setScale(2,2);
-                    bullet.setPosition(this->getGun().getPosition());
-                    bullet.setRotation(angle);
-                    angle = angle * PI/180;
-                    bullet.move(60 * cos(angle), 60 * sin(angle));
-
-                    this->bullets->push_back(bullet);
-                }
+                if (ev.mouseButton.button == sf::Mouse::Left)
+                    this->fireGun(playerBullets);
                 break;
         }
     }
@@ -93,11 +87,26 @@ bool Game::bulletCheckCollisions(sf::Sprite * bullet) {
 }
 
 void Game::updateBullets() {
-    auto itr = this->bullets->begin();
+    auto itr = this->playerBullets->begin();
 
-    for (itr; itr < bullets->end(); itr++){
+    for (itr; itr < playerBullets->end(); itr++){
         sf::Sprite * bullet = &*itr;
         float angle = (*bullet).getRotation() * PI/180;
+        if ((*itr).getGlobalBounds().intersects(this->firstEnemy->getCharSprite().getGlobalBounds()))
+            playerBullets->erase(itr);
+
+//        if (bulletCheckCollisions(bullet))
+//            bullets->erase(itr);
+
+        (*bullet).move(bulletSpeed * cos(angle), bulletSpeed * sin(angle));
+    }
+
+    itr = this->enemyBullets->begin();
+
+    for (itr; itr < enemyBullets -> end(); itr++){
+        sf::Sprite * bullet = &*itr;
+        float angle = (*bullet).getRotation() * PI/180;
+
 
 //        if (bulletCheckCollisions(bullet))
 //            bullets->erase(itr);
@@ -111,7 +120,17 @@ void Game::updateGame() {
 
     this->updateBullets();
 
+    firstEnemy->updateGun(this->character.getPosition());
+    firstEnemy->shootCycle(enemyBullets);
+
     this->update(this->window);
+}
+
+void Game::renderVector(std::vector<sf::Sprite> * spriteVector) {
+    auto itr = spriteVector->begin();
+
+    for (itr; itr < spriteVector->end(); itr++)
+        this->window->draw(*itr);
 }
 
 void Game::renderGame() {
@@ -119,11 +138,14 @@ void Game::renderGame() {
 
     // render objects
     this->window->draw(background);
-    this->render(this->window);
-    auto itr = this->bullets->begin();
 
-    for (itr; itr < bullets->end(); itr++)
-        this->window->draw(*itr);
+    // Render Characters
+    this->render(this->window);
+    firstEnemy->render(this->window);
+
+    // Render Bullets
+    this->renderVector(playerBullets);
+    this->renderVector(enemyBullets);
 
     this->window->display();
 }

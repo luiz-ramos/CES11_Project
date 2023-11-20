@@ -74,36 +74,13 @@ void Player::updateInput() {
     if (!check && current > 3)
         current -= 4;
 
-    shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
+    shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/10,
                        this->character.getGlobalBounds().top + 4 * this->character.getGlobalBounds().height/5);
 }
 
 void Player::updateMousePos(const sf::RenderWindow *target) {
     this->mousePos = sf::Mouse::getPosition(*target);
     this->mousePosView = target->mapPixelToCoords(this->mousePos);
-}
-
-void Player::updateGun() {
-    this->gun.setPosition(this->character.getGlobalBounds().left,this->character.getGlobalBounds().top);
-
-    sf::Vector2f dir = mousePosView - this->character.getPosition();
-    float x = dir.x;
-    float y = dir.y;
-
-    dir.x /= pow(pow(x,2) + pow(y,2) , 0.5);
-    dir.y /= pow(pow(x,2) + pow(y,2) , 0.5);
-
-    x = dir.x;
-    y = dir.y;
-
-    float angle = acos(x) * 180/PI;
-
-    if (y <= 0)
-        this->gun.setRotation(-angle);
-    else
-        this->gun.setRotation(angle);
-
-    this->gun.move(this->character.getGlobalBounds().width/4, this->character.getGlobalBounds().height/2);
 }
 
 void Player::updateCollisions(const sf::RenderTarget * target) {
@@ -125,13 +102,13 @@ void Player::updateCollisions(const sf::RenderTarget * target) {
 void Player::update(const sf::RenderWindow * target) {
 
     // Keyboard input
-    updateInput();
+    this->updateInput();
 
     // Mouse Positions
-    updateMousePos(target);
+    this->updateMousePos(target);
 
     // Gun direction
-    updateGun();
+    this->updateGun(mousePosView);
 
     // Collisions
     updateCollisions(target);

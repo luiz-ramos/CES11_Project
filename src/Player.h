@@ -28,7 +28,6 @@ public:
     void update(const sf::RenderWindow * target);
     void updateInput();
     void updateMousePos(const sf::RenderWindow * target);
-    void updateGun();
     void updateCollisions(const sf::RenderTarget * target);
 };
 
