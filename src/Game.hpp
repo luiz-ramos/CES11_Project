@@ -5,29 +5,24 @@
 #ifndef GAME_PROJECT_GAME_HPP
 #define GAME_PROJECT_GAME_HPP
 
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
+#include "Player.h"
 
-
-class Game {
+class Game : public Player {
 private:
     sf::RenderWindow *window;
     sf::VideoMode videoMode;
     sf::Event ev;
     sf::Texture mainBackground;
-
-    // Mouse position
-    sf::Vector2i mousePos;
-    sf::Vector2f mousePosView;
+    int bulletSpeed = 5.f;
 
     // Game Objects
     sf::Sprite background;
+    std::vector<sf::Sprite> * bullets;
 
     // Private functions
-    void initVars();
+    void initGameVars();
     void initWindow();
-    void initBackground();
+    void initTextures();
 
 public:
 
@@ -41,9 +36,10 @@ public:
     // Functions
 
     void pollEvents();
-    void updateMousePos();
-    void update();
-    void render();
+    void updateGame();
+    void updateBullets();
+    bool bulletCheckCollisions(sf::Sprite * bullet);
+    void renderGame();
 };
 
 
