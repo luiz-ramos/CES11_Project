@@ -5,21 +5,13 @@
 #include "Game.hpp"
 #define PI 3.14159265
 
-// Private functions
+// Initializers
 void Game::initGameVars() {
-    this->window = nullptr;
-    outline.setOutlineColor(sf::Color::White);
-    outline.setFillColor(sf::Color::Transparent);
-    outline.setOutlineThickness(2);
-    characterChoice = false;
-    gunChoice = false;
-
-    this->statsTree = new Tree;
+    this->uiSprites = new std::vector<sf::Sprite>;
     this->playerBullets = new std::vector<sf::Sprite>;
     this->enemyBullets = new std::vector<sf::Sprite>;
     this->mugshots = new std::vector<sf::Texture>;
 
-    statsTree->value = 0;
     mugshots->reserve(5);
 }
 
@@ -28,13 +20,16 @@ void Game::initWindow() {
     this->videoMode.width = 728;
 
     this->window = new sf::RenderWindow(this->videoMode, "AirportIncursion", sf::Style::Titlebar | sf::Style::Close);
-
     this->window->setFramerateLimit(144);
 }
 
 void Game::initTextures() {
     mainBackground.loadFromFile("../../src/sprites/mapaResenha.jpg");
     background.setTexture(mainBackground);
+
+    outline.setOutlineColor(sf::Color::White);
+    outline.setFillColor(sf::Color::Transparent);
+    outline.setOutlineThickness(2);
 }
 
 void Game::initFont() {
@@ -45,38 +40,27 @@ void Game::initFont() {
     text.setCharacterSize(20);
 }
 
-void Game::updateMousePos() {
-    this->mousePos = sf::Mouse::getPosition(*(this->window));
-    this->mousePosView = this->window->mapPixelToCoords(this->mousePos);
+void Game::initTree() {
+    this->statsTree = make(0,
+                           make(0,
+                                make(0),
+                                make(0)),
+                           make(0,
+                                make(0),
+                                make(0))
+                           );
+
+    // Since choices were not made yet
+    this->characterChoice = false;
+    this->gunChoice = false;
 }
 
-void Game::displayChars(const std::string path, int scale) {
-    int run = 0;
-
-    for (const auto &entry : std::filesystem::directory_iterator(path)){
-        sf::Texture mugshotTexture;
-        sf::Sprite mugshot;
-
-        mugshotTexture.loadFromFile(entry.path().string());
-
-        this->mugshots->push_back(mugshotTexture);
-        mugshot.setTexture(mugshots->at(run++));
-
-        this->playerBullets->push_back(mugshot);
-    }
-
-    for (int i = 0; i < this->playerBullets->size(); i++){
-        this->playerBullets->at(i).setPosition(160 + 240 * i, 250);
-        this->playerBullets->at(i).setScale(scale, scale);
-        this->window->draw(this->playerBullets->at(i));
-    }
-}
-
-void Game::setOutline() {
+// Update functions
+void Game::updateOutline() {
     bool check = false;
-    auto itr = playerBullets->begin();
+    auto itr = uiSprites->begin();
 
-    for (itr; itr < playerBullets->end(); itr++)
+    for (itr; itr < uiSprites->end(); itr++)
         if ((*itr).getGlobalBounds().contains(this->mousePosView)){
             outline.setOutlineColor(sf::Color::White);
             outline.setPosition((*itr).getGlobalBounds().getPosition());
@@ -88,133 +72,9 @@ void Game::setOutline() {
         outline.setOutlineColor(sf::Color::Transparent);
 }
 
-void Game::setCharacter() {
-    displayChars("../../src/sprites/characters/mugshots", 1);
-    while (!characterChoice || !gunChoice){
-        this->window->clear();
-        this->pollEvents();
-
-        this->updateMousePos();
-
-        if (!characterChoice)
-            text.setString("CHOOSE YOUR CHARACTER");
-        else
-            text.setString("CHOOSE YOUR GUN");
-
-        this->setOutline();
-
-        this->renderVector(playerBullets);
-        this->window->draw(outline);
-        this->window->draw(text);
-
-        this->window->display();
-    }
-
-    statsTree->value = 2;
-}
-
-// Constructors and destructors
-
-Game::Game() {
-    this->initGameVars();
-    this->initWindow();
-    this->initTextures();
-    this->initFont();
-
-    firstEnemy = new Enemy(0, 0, 1, 600, 600);
-
-
-    if (statsTree->value == 0)
-        setCharacter();
-
-    player = new Player(statsTree->lchild->value,
-                        statsTree->rchild->value
-                        ,364,364);
-}
-
-Game::~Game(){
-    delete this->window;
-    delete this->playerBullets;
-    delete this->enemyBullets;
-    delete this->mugshots;
-}
-
-// Accessors
-
-bool Game::running() const &{
-    return this->window->isOpen();
-}
-
-// Functions
-
-void Game::pollEvents() {
-    while (this->window->pollEvent(this->ev)){
-        switch (this->ev.type) {
-            case sf::Event::Closed:
-                this->window->close();
-                break;
-            case sf::Event::KeyPressed:
-                if (this->ev.key.code == sf::Keyboard::Escape)
-                    this->window->close();
-                break;
-            case sf::Event::MouseButtonPressed:
-                if (ev.mouseButton.button == sf::Mouse::Left && statsTree->value == 0){
-                    int choice = 0;
-                    auto itr = playerBullets->begin();
-
-                    for (itr; itr < playerBullets->end(); itr++){
-                        if ((*itr).getGlobalBounds().contains(this->mousePosView)){
-                            if (!characterChoice){
-                                characterChoice = true;
-                                statsTree->lchild = new Tree;
-                                statsTree->lchild->value = choice;
-                                std::cout << playerBullets->size();
-                                text.move(50.f, 0.f);
-                            }
-                            else{
-                                gunChoice = true;
-                                statsTree->rchild = new Tree;
-                                statsTree->rchild->value = choice;
-                            }
-
-                            while (!mugshots->empty())
-                                mugshots->pop_back();
-                            while (!playerBullets->empty())
-                                playerBullets->pop_back();
-
-                            if (!gunChoice)
-                                displayChars("../../src/sprites/gun", 10);
-                        }
-                        choice++;
-                    }
-                }
-
-                if (ev.mouseButton.button == sf::Mouse::Left && statsTree->value == 2) {
-                    this->player->fireGun(playerBullets);
-                    std::cout << this->player->getBulletTexture().getSize().x << ' '
-                    << this->player->getBulletTexture().getSize().y << '\n';
-                }
-                break;
-        }
-    }
-}
-
-bool Game::bulletCheckCollisions(sf::Sprite * bullet) {
-    sf::FloatRect playerBounds = bullet->getGlobalBounds();
-
-    if (playerBounds.left <= 0.f)
-        return true;
-
-    else if (playerBounds.left + playerBounds.width >= window->getSize().x)
-        return true;
-
-    if (playerBounds.top <= 0.f)
-        return true;
-
-    else if (playerBounds.top + playerBounds.height >= window->getSize().y)
-        return true;
-
-    return false;
+void Game::updateMousePos() {
+    this->mousePos = sf::Mouse::getPosition(*(this->window));
+    this->mousePosView = this->window->mapPixelToCoords(this->mousePos);
 }
 
 void Game::updateBullets() {
@@ -242,8 +102,169 @@ void Game::updateBullets() {
     }
 }
 
+bool Game::updateBulletCollisions(sf::Sprite * bullet) {
+    sf::FloatRect playerBounds = bullet->getGlobalBounds();
+
+    if (playerBounds.left <= 0.f)
+        return true;
+
+    else if (playerBounds.left + playerBounds.width >= window->getSize().x)
+        return true;
+
+    if (playerBounds.top <= 0.f)
+        return true;
+
+    else if (playerBounds.top + playerBounds.height >= window->getSize().y)
+        return true;
+
+    return false;
+}
+
+// Render functions
+void Game::renderVector(std::vector<sf::Sprite> * spriteVector) {
+    auto itr = spriteVector->begin();
+
+    for (itr; itr < spriteVector->end(); itr++)
+        this->window->draw(*itr);
+}
+
+// UI related
+void Game::setCharacter() {
+    displayChars("../../src/sprites/characters/mugshots", 1);
+    while (!characterChoice || !gunChoice){
+        this->window->clear();
+        this->pollEvents();
+
+        this->updateMousePos();
+
+        if (!characterChoice)
+            text.setString("CHOOSE YOUR CHARACTER");
+        else
+            text.setString("CHOOSE YOUR GUN");
+
+        this->updateOutline();
+
+        this->renderVector(uiSprites);
+        this->window->draw(outline);
+        this->window->draw(text);
+
+        this->window->display();
+    }
+
+    statsTree->value = 2;
+}
+
+void Game::displayChars(std::string path, int scale) {
+    int run = 0;
+
+    for (const auto &entry : std::filesystem::directory_iterator(path)){
+        sf::Texture mugshotTexture;
+        sf::Sprite mugshot;
+
+        mugshotTexture.loadFromFile(entry.path().string());
+
+        this->mugshots->push_back(mugshotTexture);
+        mugshot.setTexture(mugshots->at(run++));
+
+        this->uiSprites->push_back(mugshot);
+    }
+
+    for (int i = 0; i < this->uiSprites->size(); i++){
+        this->uiSprites->at(i).setPosition(160 + 240 * i, 250);
+        this->uiSprites->at(i).setScale(scale, scale);
+        this->window->draw(this->uiSprites->at(i));
+    }
+}
+
+// Polling
+void Game::pollEvents() {
+    while (this->window->pollEvent(this->ev)){
+        switch (this->ev.type) {
+            case sf::Event::Closed:
+                this->window->close();
+                break;
+            case sf::Event::KeyPressed:
+                if (this->ev.key.code == sf::Keyboard::Escape)
+                    this->window->close();
+                break;
+            case sf::Event::MouseButtonPressed:
+                if (ev.mouseButton.button == sf::Mouse::Left) {
+                    switch (statsTree->value) {
+                        case 0:
+                            this->pollCharacterChoice();
+                            break;
+                        case 1:
+                            break;
+                        case 2:
+                            this->player->fireGun(playerBullets);
+                            break;
+                    }
+                    break;
+                }
+        }
+    }
+}
+
+void Game::pollCharacterChoice() {
+    int choice = 0;
+    auto itr = uiSprites->begin();
+
+    for (itr; itr < uiSprites->end(); itr++) {
+        if ((*itr).getGlobalBounds().contains(this->mousePosView)) {
+            if (!characterChoice) {
+                characterChoice = true;
+                statsTree->lChild = new Tree{choice, nullptr};
+                text.move(50.f, 0.f);
+            } else {
+                gunChoice = true;
+                statsTree->rChild = new Tree{choice, nullptr};
+            }
+
+            while (!mugshots->empty())
+                mugshots->pop_back();
+            while (!uiSprites->empty())
+                uiSprites->pop_back();
+
+            if (!gunChoice)
+                displayChars("../../src/sprites/gun", 10);
+        }
+        choice++;
+    }
+}
+
+// Constructors and destructors
+Game::Game() {
+    this->initTree();
+    this->initWindow();
+    this->initGameVars();
+    this->initTextures();
+    this->initFont();
+    this->setCharacter();
+
+    firstEnemy = new Enemy(0, 1, 1, 600, 600);
+    player = new Player(statsTree->lChild->value,
+                        statsTree->rChild->value
+                        ,364,364);
+}
+
+Game::~Game(){
+    delete this->window;
+    delete this->uiSprites;
+    delete this->playerBullets;
+    delete this->enemyBullets;
+    delete this->mugshots;
+}
+
+// Accessors
+bool Game::running() const &{
+    return this->window->isOpen();
+}
+
+// Functions
 void Game::updateGame() {
     switch (statsTree->value){
+        case 1:
+            break;
         case 2:
             this->pollEvents();
 
@@ -258,23 +279,17 @@ void Game::updateGame() {
     }
 }
 
-void Game::renderVector(std::vector<sf::Sprite> * spriteVector) {
-    auto itr = spriteVector->begin();
-
-    for (itr; itr < spriteVector->end(); itr++)
-        this->window->draw(*itr);
-}
-
 void Game::renderGame() {
+    this->window->clear();
+
+    this->window->draw(background);
+    this->player->render(this->window);
+
     switch (statsTree->value) {
+        case 1:
+            break;
         case 2:
-            this->window->clear();
-
-            // render objects
-            this->window->draw(background);
-
-            // Render Characters
-            this->player->render(this->window);
+            // Render Enemies
             if (firstEnemy->getHealth() > 0)
                 firstEnemy->render(this->window);
 

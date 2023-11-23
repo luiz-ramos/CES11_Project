@@ -71,8 +71,8 @@ void Player::updateInput() {
     if (!check && current > 3)
         current -= 4;
 
-    shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/10,
-                       this->character.getGlobalBounds().top + 4 * this->character.getGlobalBounds().height/5);
+    shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
+                       this->character.getGlobalBounds().top + 6 * this->character.getGlobalBounds().height/7);
 }
 
 void Player::updateCollisions(const sf::RenderTarget * target) {

@@ -9,7 +9,7 @@ void Enemy::initVars(int difficulty) {
     enemyLevel = difficulty;
     timer = 0;
 
-    shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/10,
+    shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
                        this->character.getGlobalBounds().top +  this->character.getGlobalBounds().height);
 }
 
@@ -27,7 +27,7 @@ sf::Sprite Enemy::getCharSprite() const &{
 
 // Functions
 void Enemy::shootCycle(std::vector<sf::Sprite> * bullets) {
-    if (timer == 30 && health > 0){
+    if (timer == 50 && health > 0){
         this->fireGun(bullets);
         timer = 0;
     }

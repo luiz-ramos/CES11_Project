@@ -34,7 +34,7 @@ void Character::initCharTexture(int charId) {
 
     shadowTexture.loadFromFile("../../src/sprites/characters/mr_shadow.png");
     shadow.setTexture(shadowTexture);
-    shadow.setScale(3,3);
+    shadow.setScale(2,2);
 }
 
 void Character::initGunTexture(int GunId) {
