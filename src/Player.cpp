@@ -78,17 +78,19 @@ void Player::updateInput() {
 void Player::updateCollisions(const sf::RenderTarget * target) {
     sf::FloatRect playerBounds = this->character.getGlobalBounds();
 
+    if (playerBounds.top <= 45.f)
+        this->character.setPosition(playerBounds.left, 45.f);
+
+    else if (playerBounds.top + playerBounds.height >= target->getSize().y - 45.f)
+        this->character.setPosition(playerBounds.left, target->getSize().y - playerBounds.height - 45.f);
+
     if (playerBounds.left <= 45.f)
         this->character.setPosition(45.f, playerBounds.top);
 
     else if (playerBounds.left + playerBounds.width >= target->getSize().x - 45.f)
         this->character.setPosition(target->getSize().x - playerBounds.width - 45.f, playerBounds.top);
 
-    if (playerBounds.top <= 45.f)
-        this->character.setPosition(playerBounds.left, 45.f);
 
-    else if (playerBounds.top + playerBounds.height >= target->getSize().y - 45.f)
-        this->character.setPosition(playerBounds.left, target->getSize().y - playerBounds.height - 45.f);
 }
 
 void Player::update(const sf::RenderWindow * target, sf::Vector2f gunTarget) {

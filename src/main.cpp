@@ -3,10 +3,6 @@
 
 int main()
 {
-    // Initialize game
-//    if (FILE * saveFile = fopen("../../src/save/statsSave.txt", "r")){
-//        fclose(saveFile);
-//    };
     Game game;
 
     // Game loop

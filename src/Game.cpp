@@ -7,10 +7,14 @@
 
 // Initializers
 void Game::initGameVars() {
+    this->uiTexts = new std::vector<sf::Text>;
     this->uiSprites = new std::vector<sf::Sprite>;
     this->playerBullets = new std::vector<sf::Sprite>;
     this->enemyBullets = new std::vector<sf::Sprite>;
     this->mugshots = new std::vector<sf::Texture>;
+
+    this->bulletSpeed = 5.f;
+    this->exit = false;
 
     mugshots->reserve(5);
 }
@@ -24,8 +28,9 @@ void Game::initWindow() {
 }
 
 void Game::initTextures() {
-    mainBackground.loadFromFile("../../src/sprites/mapaResenha.jpg");
-    background.setTexture(mainBackground);
+    levelBackground.loadFromFile("../../src/sprites/mapaResenha.jpg");
+    worldBackground.loadFromFile("../../src/sprites/mapa.jpg");
+    background.setTexture(levelBackground);
 
     outline.setOutlineColor(sf::Color::White);
     outline.setFillColor(sf::Color::Transparent);
@@ -41,7 +46,7 @@ void Game::initFont() {
 }
 
 void Game::initTree() {
-    this->statsTree = make(0,
+    this->statsTree = make(-1,
                            make(0,
                                 make(0),
                                 make(0)),
@@ -56,11 +61,27 @@ void Game::initTree() {
 }
 
 // Update functions
-void Game::updateOutline() {
-    bool check = false;
-    auto itr = uiSprites->begin();
+void Game::reset() {
+    this->exit = false;
+    delete this->firstEnemy;
 
-    for (itr; itr < uiSprites->end(); itr++)
+    this->firstEnemy = new Enemy{0,1,1, 600, 600};
+
+    while (!this->playerBullets->empty())
+        this->playerBullets->pop_back();
+    while (!this->enemyBullets->empty())
+        this->enemyBullets->pop_back();
+
+    characterChoice = false;
+    gunChoice = false;
+}
+
+template <typename T>
+void Game::updateOutline(T * objectsVector) {
+    bool check = false;
+    auto itr = objectsVector->begin();
+
+    for (itr; itr < objectsVector->end(); itr++)
         if ((*itr).getGlobalBounds().contains(this->mousePosView)){
             outline.setOutlineColor(sf::Color::White);
             outline.setPosition((*itr).getGlobalBounds().getPosition());
@@ -121,37 +142,58 @@ bool Game::updateBulletCollisions(sf::Sprite * bullet) {
 }
 
 // Render functions
-void Game::renderVector(std::vector<sf::Sprite> * spriteVector) {
-    auto itr = spriteVector->begin();
+template <typename T>
+void Game::renderVector(T * objectsVector) {
+    auto itr = objectsVector->begin();
 
-    for (itr; itr < spriteVector->end(); itr++)
+    for (itr; itr < objectsVector->end(); itr++)
         this->window->draw(*itr);
 }
 
 // UI related
-void Game::setCharacter() {
-    displayChars("../../src/sprites/characters/mugshots", 1);
-    while (!characterChoice || !gunChoice){
-        this->window->clear();
-        this->pollEvents();
+void Game::initMenu() {
+    sf::Text newGame;
+    sf::Text loadGame;
+    newGame.setFont(font);
+    loadGame.setFont(font);
+    newGame.setFillColor(sf::Color::White);
+    loadGame.setFillColor(sf::Color::White);
+    newGame.setPosition(280, 264);
+    loadGame.setPosition(270, 350);
+    newGame.setString("NEW GAME");
+    loadGame.setString("LOAD GAME");
 
-        this->updateMousePos();
+    this->uiTexts->push_back(newGame);
+    this->uiTexts->push_back(loadGame);
+}
 
-        if (!characterChoice)
-            text.setString("CHOOSE YOUR CHARACTER");
-        else
-            text.setString("CHOOSE YOUR GUN");
+void Game::initExit() {
+    sf::Text yes;
+    sf::Text no;
+    yes.setFont(font);
+    no.setFont(font);
+    yes.setFillColor(sf::Color::Black);
+    no.setFillColor(sf::Color::Black);
+    yes.setPosition(300, 350);
+    no.setPosition(315, 450);
+    yes.setString("YES");
+    no.setString("NO");
+    yes.setCharacterSize(45);
+    no.setCharacterSize(45);
+    this->text.setString("DO YOU WISH \n   TO SAVE?");
+    this->text.setPosition(200, 100);
+    this->text.setCharacterSize(45);
+    this->text.setFillColor(sf::Color::Black);
 
-        this->updateOutline();
+    this->uiTexts->push_back(yes);
+    this->uiTexts->push_back(no);
+}
 
-        this->renderVector(uiSprites);
-        this->window->draw(outline);
-        this->window->draw(text);
-
-        this->window->display();
-    }
-
-    statsTree->value = 2;
+void Game::save() {
+    std::ofstream file;
+    file.open("../../src/saves/save.txt", std::ios::out);
+    printTree(statsTree, file);
+    file.close();
 }
 
 void Game::displayChars(std::string path, int scale) {
@@ -159,14 +201,14 @@ void Game::displayChars(std::string path, int scale) {
 
     for (const auto &entry : std::filesystem::directory_iterator(path)){
         sf::Texture mugshotTexture;
-        sf::Sprite mugshot;
+        sf::Sprite charMugshot;
 
         mugshotTexture.loadFromFile(entry.path().string());
 
         this->mugshots->push_back(mugshotTexture);
-        mugshot.setTexture(mugshots->at(run++));
+        charMugshot.setTexture(mugshots->at(run++));
 
-        this->uiSprites->push_back(mugshot);
+        this->uiSprites->push_back(charMugshot);
     }
 
     for (int i = 0; i < this->uiSprites->size(); i++){
@@ -184,25 +226,89 @@ void Game::pollEvents() {
                 this->window->close();
                 break;
             case sf::Event::KeyPressed:
-                if (this->ev.key.code == sf::Keyboard::Escape)
-                    this->window->close();
+                if (this->ev.key.code == sf::Keyboard::Escape) {
+//                    this->window->close();
+                    exit = true;
+                    initExit();
+                }
                 break;
             case sf::Event::MouseButtonPressed:
                 if (ev.mouseButton.button == sf::Mouse::Left) {
                     switch (statsTree->value) {
+                        case -1:
+                            // Menu
+                            switch (pollUiChoices()){
+                                case 0:
+                                    this->statsTree->value = 0;
+                                    this->displayChars("../../src/sprites/characters/mugshots", 1);
+                                    this->text.setString("CHOOSE YOUR CHARACTER");
+                                    break;
+                                case 1:
+                                    deleteTree(statsTree);
+                                    std::ifstream file;
+                                    file.open("../../src/saves/save.txt", std::ios::in);
+                                    this->statsTree = read(file);
+                                    file.close();
+
+                                    this->player = new Player(this->statsTree->lChild->value,
+                                                              this->statsTree->rChild->value,
+                                                              364, 364);
+                                    this->background.setTexture(levelBackground);
+                                    break;
+                            }
+                            break;
                         case 0:
+                            // Character creation
                             this->pollCharacterChoice();
+                            if (characterChoice && gunChoice){
+                                this->statsTree->value = 2;
+                                this->player = new Player(this->statsTree->lChild->value,
+                                                          this->statsTree->rChild->value,
+                                                          364, 364);
+                                this->background.setTexture(levelBackground);
+                            }
+
                             break;
                         case 1:
+                            // Map navigation
+
                             break;
                         case 2:
-                            this->player->fireGun(playerBullets);
+                            // Level
+                            if (!exit){
+                                this->player->fireGun(playerBullets);
+                            }
+                            else {
+                                switch (pollUiChoices()){
+                                    case 0:
+                                        this->save();
+                                    case 1:
+                                        this->statsTree->value = -1;
+                                        this->initMenu();
+                                        this->reset();
+                                        break;
+                                }
+                            }
+
                             break;
                     }
                     break;
                 }
         }
     }
+}
+
+int Game::pollUiChoices() {
+    for (int i = 0; i < uiTexts->size(); i++){
+        if (uiTexts->at(i).getGlobalBounds().contains(this->mousePosView)){
+            while (!this->uiTexts->empty())
+                this->uiTexts->pop_back();
+
+            return i;
+        }
+    }
+
+    return 5;
 }
 
 void Game::pollCharacterChoice() {
@@ -215,7 +321,8 @@ void Game::pollCharacterChoice() {
                 characterChoice = true;
                 statsTree->lChild = new Tree{choice, nullptr};
                 text.move(50.f, 0.f);
-            } else {
+            }
+            else {
                 gunChoice = true;
                 statsTree->rChild = new Tree{choice, nullptr};
             }
@@ -225,8 +332,10 @@ void Game::pollCharacterChoice() {
             while (!uiSprites->empty())
                 uiSprites->pop_back();
 
-            if (!gunChoice)
+            if (!gunChoice) {
                 displayChars("../../src/sprites/gun", 10);
+                text.setString("CHOOSE YOUR GUN");
+            }
         }
         choice++;
     }
@@ -239,12 +348,12 @@ Game::Game() {
     this->initGameVars();
     this->initTextures();
     this->initFont();
-    this->setCharacter();
+    this->initMenu();
+
+//    this->displayChars("../../src/sprites/characters/mugshots", 1);
+//    this->text.setString("CHOOSE YOUR CHARACTER");
 
     firstEnemy = new Enemy(0, 1, 1, 600, 600);
-    player = new Player(statsTree->lChild->value,
-                        statsTree->rChild->value
-                        ,364,364);
 }
 
 Game::~Game(){
@@ -253,6 +362,7 @@ Game::~Game(){
     delete this->playerBullets;
     delete this->enemyBullets;
     delete this->mugshots;
+    deleteTree(statsTree);
 }
 
 // Accessors
@@ -261,20 +371,35 @@ bool Game::running() const &{
 }
 
 // Functions
+
 void Game::updateGame() {
+    this->pollEvents();
+
     switch (statsTree->value){
+        case -1:
+            this->updateMousePos();
+            this->updateOutline <std::vector<sf::Text>> (this->uiTexts);
+
+            break;
+        case 0:
+            this->updateMousePos();
+            this->updateOutline <std::vector<sf::Sprite>> (this->uiSprites);
+
+            break;
         case 1:
+
             break;
         case 2:
-            this->pollEvents();
 
-            this->updateBullets();
             this->updateMousePos();
+            if (!exit){
+                this->updateBullets();
 
-            firstEnemy->updateGun(this->player->getCharacter().getPosition());
-            firstEnemy->shootCycle(enemyBullets);
+                firstEnemy->updateGun(this->player->getCharacter().getPosition());
+                firstEnemy->shootCycle(enemyBullets);
 
-            this->player->update(this->window, mousePosView);
+                this->player->update(this->window, mousePosView);
+            }
             break;
     }
 }
@@ -282,13 +407,33 @@ void Game::updateGame() {
 void Game::renderGame() {
     this->window->clear();
 
-    this->window->draw(background);
-    this->player->render(this->window);
-
     switch (statsTree->value) {
+        case -1:
+            // Render UI features
+            this->renderVector <std::vector<sf::Text>>(uiTexts);
+            break;
+        case 0:
+            // Render UI features
+            this->renderVector <std::vector<sf::Sprite>> (uiSprites);
+            this->window->draw(outline);
+            this->window->draw(text);
+
+            break;
         case 1:
+            // Draw background
+            this->window->draw(background);
+
+            // Draw player
+            this->player->render(this->window);
+
             break;
         case 2:
+            // Draw background
+            this->window->draw(background);
+
+            // Draw player
+            this->player->render(this->window);
+
             // Render Enemies
             if (firstEnemy->getHealth() > 0)
                 firstEnemy->render(this->window);
@@ -296,6 +441,11 @@ void Game::renderGame() {
             // Render Bullets
             this->renderVector(playerBullets);
             this->renderVector(enemyBullets);
+
+            if (exit){
+                this->window->draw(text);
+                this->renderVector <std::vector<sf::Text>>(uiTexts);
+            }
 
             break;
     }

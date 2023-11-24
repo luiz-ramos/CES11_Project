@@ -27,7 +27,7 @@ Tree * read(std::istream &stream){
     return returnTree;
 }
 
-void print(Tree * root, std::ostream &stream){
+void printTree(const Tree * root, std::ostream &stream){
     if (root == nullptr){
         stream << '(' << ')';
         return;
@@ -35,8 +35,18 @@ void print(Tree * root, std::ostream &stream){
 
     stream << '(' << root->value;
 
-    print(root->lChild, stream);
-    print(root->rChild, stream);
+    printTree(root->lChild, stream);
+    printTree(root->rChild, stream);
 
     stream << ')';
+}
+
+void deleteTree(Tree * root){
+    if (root == nullptr)
+        return;
+
+    deleteTree(root->lChild);
+    deleteTree(root->rChild);
+
+    delete root;
 }
