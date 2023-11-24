@@ -42,10 +42,16 @@ public:
     ~Character();
 
     // Accessors
+    sf::Sprite getCharacter() const&;
     sf::Sprite getGun() const&;
     sf::Texture getBulletTexture() const&;
+    int getHealth() const&;
 
-    void upgrade(int healthUp, int damageUp);
+    // Functions
+    void updateStats(int healthUp, int damageUp);
+    void updateGun(sf::Vector2f target);
+    void fireGun(std::vector<sf::Sprite> * bullets);
+    void bulletCollision(std::vector<sf::Sprite> * bullets);
     void render(sf::RenderTarget * target);
 };
 

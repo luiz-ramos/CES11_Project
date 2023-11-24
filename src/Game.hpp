@@ -6,8 +6,10 @@
 #define GAME_PROJECT_GAME_HPP
 
 #include "Player.h"
+#include "Enemy.h"
+#include "Tree.h"
 
-class Game : public Player {
+class Game {
 private:
     sf::RenderWindow *window;
     sf::VideoMode videoMode;
@@ -15,15 +17,59 @@ private:
     sf::Texture mainBackground;
     int bulletSpeed = 5.f;
 
-    // Game Objects
-    sf::Sprite background;
-    std::vector<sf::Sprite> * bullets;
+    // Game state
+    /*
+     * state = 0 : character creation
+     * state = 1 : map navigation
+     * state = 2 : level
+     */
+    Tree * statsTree;
+    bool characterChoice;
+    bool gunChoice;
 
-    // Private functions
+    // Game Objects
+    Player * player;
+    Enemy * firstEnemy;
+
+    // Mouse position
+    sf::Vector2i mousePos;
+    sf::Vector2f mousePosView;
+
+    // Sprites
+    sf::Sprite background;
+    sf::RectangleShape outline;
+    std::vector<sf::Sprite> * uiSprites;
+    std::vector<sf::Sprite> * playerBullets;
+    std::vector<sf::Sprite> * enemyBullets;
+    std::vector<sf::Texture> * mugshots;
+
+    // Text specific
+    sf::Font font;
+    sf::Text text;
+
+    // Initializers
     void initGameVars();
     void initWindow();
     void initTextures();
+    void initFont();
+    void initTree();
 
+    // Update functions
+    void updateOutline();
+    void updateMousePos();
+    void updateBullets();
+    bool updateBulletCollisions(sf::Sprite * bullet);
+
+    // Render functions
+    void renderVector(std::vector<sf::Sprite> * spriteVector);
+
+    // UI related
+    void setCharacter();
+    void displayChars(std::string path, int scale);
+
+    // Polling
+    void pollEvents();
+    void pollCharacterChoice();
 public:
 
     // Constructor and destructor
@@ -34,11 +80,7 @@ public:
     bool running() const&;
 
     // Functions
-
-    void pollEvents();
     void updateGame();
-    void updateBullets();
-    bool bulletCheckCollisions(sf::Sprite * bullet);
     void renderGame();
 };
 

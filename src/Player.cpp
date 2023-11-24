@@ -7,13 +7,11 @@
 
 
 // Private functions
-
 void Player::loadTexture() {
     this->character.setTexture(characterTextures->at(this->current));
 }
 
 // Constructors and Destructors
-
 Player::Player(int playerID, int gunId, float x, float y) : Character(playerID, gunId, x, y){
     movementSpeed = 3.f;
 }
@@ -23,7 +21,6 @@ Player::~Player() {
 }
 
 // Functions
-
 void Player::updateInput() {
     bool check = false;
 
@@ -75,35 +72,7 @@ void Player::updateInput() {
         current -= 4;
 
     shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
-                       this->character.getGlobalBounds().top + 4 * this->character.getGlobalBounds().height/5);
-}
-
-void Player::updateMousePos(const sf::RenderWindow *target) {
-    this->mousePos = sf::Mouse::getPosition(*target);
-    this->mousePosView = target->mapPixelToCoords(this->mousePos);
-}
-
-void Player::updateGun() {
-    this->gun.setPosition(this->character.getGlobalBounds().left,this->character.getGlobalBounds().top);
-
-    sf::Vector2f dir = mousePosView - this->character.getPosition();
-    float x = dir.x;
-    float y = dir.y;
-
-    dir.x /= pow(pow(x,2) + pow(y,2) , 0.5);
-    dir.y /= pow(pow(x,2) + pow(y,2) , 0.5);
-
-    x = dir.x;
-    y = dir.y;
-
-    float angle = acos(x) * 180/PI;
-
-    if (y <= 0)
-        this->gun.setRotation(-angle);
-    else
-        this->gun.setRotation(angle);
-
-    this->gun.move(this->character.getGlobalBounds().width/4, this->character.getGlobalBounds().height/2);
+                       this->character.getGlobalBounds().top + 6 * this->character.getGlobalBounds().height/7);
 }
 
 void Player::updateCollisions(const sf::RenderTarget * target) {
@@ -122,16 +91,13 @@ void Player::updateCollisions(const sf::RenderTarget * target) {
         this->character.setPosition(playerBounds.left, target->getSize().y - playerBounds.height - 45.f);
 }
 
-void Player::update(const sf::RenderWindow * target) {
+void Player::update(const sf::RenderWindow * target, sf::Vector2f gunTarget) {
 
     // Keyboard input
-    updateInput();
-
-    // Mouse Positions
-    updateMousePos(target);
+    this->updateInput();
 
     // Gun direction
-    updateGun();
+    this->updateGun(gunTarget);
 
     // Collisions
     updateCollisions(target);

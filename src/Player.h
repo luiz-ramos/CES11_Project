@@ -11,10 +11,6 @@ class Player : public Character{
 protected:
     float movementSpeed;
 
-    // Mouse position
-    sf::Vector2i mousePos;
-    sf::Vector2f mousePosView;
-
     // Private functions
     void loadTexture();
 
@@ -24,11 +20,10 @@ public:
     Player(int playerID, int gunId, float x = 0.f, float y = 0.f);
     ~Player();
 
+
     // Functions
-    void update(const sf::RenderWindow * target);
+    void update(const sf::RenderWindow * target, sf::Vector2f gunTarget);
     void updateInput();
-    void updateMousePos(const sf::RenderWindow * target);
-    void updateGun();
     void updateCollisions(const sf::RenderTarget * target);
 };
 
