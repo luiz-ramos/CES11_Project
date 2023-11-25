@@ -11,12 +11,12 @@ void Game::initGameVars() {
     this->uiSprites = new std::vector<sf::Sprite>;
     this->playerBullets = new std::vector<sf::Sprite>;
     this->enemyBullets = new std::vector<sf::Sprite>;
-    this->mugshots = new std::vector<sf::Texture>;
+    this->textures = new std::vector<sf::Texture>;
 
     this->bulletSpeed = 5.f;
     this->exit = false;
 
-    mugshots->reserve(5);
+    textures->reserve(5);
 }
 
 void Game::initWindow() {
@@ -205,8 +205,8 @@ void Game::displayChars(std::string path, int scale) {
 
         mugshotTexture.loadFromFile(entry.path().string());
 
-        this->mugshots->push_back(mugshotTexture);
-        charMugshot.setTexture(mugshots->at(run++));
+        this->textures->push_back(mugshotTexture);
+        charMugshot.setTexture(textures->at(run++));
 
         this->uiSprites->push_back(charMugshot);
     }
@@ -227,9 +227,21 @@ void Game::pollEvents() {
                 break;
             case sf::Event::KeyPressed:
                 if (this->ev.key.code == sf::Keyboard::Escape) {
-//                    this->window->close();
                     exit = true;
                     initExit();
+                }
+                break;
+            case sf::Event::MouseButtonReleased:
+                switch (statsTree->value) {
+                    case 2:
+                        if (this->ev.key.code == sf::Keyboard::A || this->ev.key.code == sf::Keyboard::Left ||
+                            this->ev.key.code == sf::Keyboard::W || this->ev.key.code == sf::Keyboard::Up   ||
+                            this->ev.key.code == sf::Keyboard::S || this->ev.key.code == sf::Keyboard::Down ||
+                            this->ev.key.code == sf::Keyboard::D || this->ev.key.code == sf::Keyboard::Right)
+                        {
+                            this->player->resetAnimationTimer();
+                        }
+                        break;
                 }
                 break;
             case sf::Event::MouseButtonPressed:
@@ -275,9 +287,8 @@ void Game::pollEvents() {
                             break;
                         case 2:
                             // Level
-                            if (!exit){
+                            if (!exit)
                                 this->player->fireGun(playerBullets);
-                            }
                             else {
                                 switch (pollUiChoices()){
                                     case 0:
@@ -327,8 +338,8 @@ void Game::pollCharacterChoice() {
                 statsTree->rChild = new Tree{choice, nullptr};
             }
 
-            while (!mugshots->empty())
-                mugshots->pop_back();
+            while (!textures->empty())
+                textures->pop_back();
             while (!uiSprites->empty())
                 uiSprites->pop_back();
 
@@ -350,10 +361,7 @@ Game::Game() {
     this->initFont();
     this->initMenu();
 
-//    this->displayChars("../../src/sprites/characters/mugshots", 1);
-//    this->text.setString("CHOOSE YOUR CHARACTER");
-
-    firstEnemy = new Enemy(0, 1, 1, 600, 600);
+    firstEnemy = new Enemy(0, 1, 1, 100, 600);
 }
 
 Game::~Game(){
@@ -361,7 +369,7 @@ Game::~Game(){
     delete this->uiSprites;
     delete this->playerBullets;
     delete this->enemyBullets;
-    delete this->mugshots;
+    delete this->textures;
     deleteTree(statsTree);
 }
 
@@ -374,15 +382,14 @@ bool Game::running() const &{
 
 void Game::updateGame() {
     this->pollEvents();
+    this->updateMousePos();
 
     switch (statsTree->value){
         case -1:
-            this->updateMousePos();
             this->updateOutline <std::vector<sf::Text>> (this->uiTexts);
 
             break;
         case 0:
-            this->updateMousePos();
             this->updateOutline <std::vector<sf::Sprite>> (this->uiSprites);
 
             break;
@@ -390,14 +397,10 @@ void Game::updateGame() {
 
             break;
         case 2:
-
-            this->updateMousePos();
             if (!exit){
                 this->updateBullets();
 
-                firstEnemy->updateGun(this->player->getCharacter().getPosition());
-                firstEnemy->shootCycle(enemyBullets);
-
+                this->firstEnemy->updateEnemy(this->player->getCharacter().getPosition(), enemyBullets);
                 this->player->update(this->window, mousePosView);
             }
             break;

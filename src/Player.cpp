@@ -6,14 +6,10 @@
 #define PI 3.14159265
 
 
-// Private functions
-void Player::loadTexture() {
-    this->character.setTexture(characterTextures->at(this->current));
-}
-
 // Constructors and Destructors
 Player::Player(int playerID, int gunId, float x, float y) : Character(playerID, gunId, x, y){
     movementSpeed = 3.f;
+    this->animationTimer.restart();
 }
 
 Player::~Player() {
@@ -22,54 +18,79 @@ Player::~Player() {
 
 // Functions
 void Player::updateInput() {
-    bool check = false;
+    float factor = sqrt(2)/2;
+    bool up = sf::Keyboard::isKeyPressed(sf::Keyboard::W) ||
+              sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
+    bool down = sf::Keyboard::isKeyPressed(sf::Keyboard::S) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
+    bool left = sf::Keyboard::isKeyPressed(sf::Keyboard::A) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::Left);
+    bool right = sf::Keyboard::isKeyPressed(sf::Keyboard::D) ||
+                 sf::Keyboard::isKeyPressed(sf::Keyboard::Right);
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+    if (this->animationState == ANIMATION_STATES::RUN_FRONT_LEFT ||
+        this->animationState == ANIMATION_STATES::RUN_BACK_LEFT ||
+        this->animationState == ANIMATION_STATES::IDLE_FRONT_LEFT||
+        this->animationState == ANIMATION_STATES::IDLE_BACK_LEFT)
 
-        this->character.move(-this->movementSpeed, 0.f);
-        this->current = 6;
-        this->loadTexture();
-        check = true;
+    {this->unFlipSprite();}
+
+    if (up){
+        if (right){
+            this->animationState = ANIMATION_STATES::RUN_BACK_RIGHT;
+            this->character.move(factor * this->movementSpeed, -factor* this->movementSpeed);
+        }
+        else if (left){
+            this->animationState = ANIMATION_STATES::RUN_BACK_LEFT;
+            this->character.move(-factor * this->movementSpeed, -factor* this->movementSpeed);
+        }
+        else{
+            this->animationState = ANIMATION_STATES::RUN_BACK;
+            this->character.move(0.f, -this->movementSpeed);
+        }
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) ||
-             sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
-
+    else if (down) {
+        if (right) {
+            this->animationState = ANIMATION_STATES::RUN_FRONT_RIGHT;
+            this->character.move(factor * this->movementSpeed, factor * this->movementSpeed);
+        } else if (left) {
+            this->animationState = ANIMATION_STATES::RUN_FRONT_LEFT;
+            this->character.move(-factor * this->movementSpeed, factor * this->movementSpeed);
+        } else {
+            this->animationState = ANIMATION_STATES::RUN_FRONT;
+            this->character.move(0.f, this->movementSpeed);
+        }
+    }
+    else if (right){
+        this->animationState = ANIMATION_STATES::RUN_FRONT_RIGHT;
         this->character.move(this->movementSpeed, 0.f);
-        this->current = 7;
-        this->loadTexture();
-        check = true;
     }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Up)){
-
-        if (check){
-            float change = 1 - 0.5 * sqrt(2);
-            int i = pow(-1, current % 2);
-            this->character.move(i * change * movementSpeed, 0.f);
+    else if (left){
+        this->animationState = ANIMATION_STATES::RUN_FRONT_LEFT;
+        this->character.move(-this->movementSpeed, 0.f);
+    }
+    else{
+        switch (animationState){
+            case ANIMATION_STATES::RUN_FRONT_RIGHT:
+                this->animationState = ANIMATION_STATES::IDLE_FRONT_RIGHT;
+                break;
+            case ANIMATION_STATES::RUN_FRONT_LEFT:
+                this->animationState = ANIMATION_STATES::IDLE_FRONT_LEFT;
+                break;
+            case ANIMATION_STATES::RUN_FRONT:
+                this->animationState = ANIMATION_STATES::IDLE_FRONT;
+                break;
+            case ANIMATION_STATES::RUN_BACK_RIGHT:
+                this->animationState = ANIMATION_STATES::IDLE_BACK_RIGHT;
+                break;
+            case ANIMATION_STATES::RUN_BACK_LEFT:
+                this->animationState = ANIMATION_STATES::IDLE_BACK_LEFT;
+                break;
+            case ANIMATION_STATES::RUN_BACK:
+                this->animationState = ANIMATION_STATES::IDLE_BACK;
+                break;
         }
-        this->character.move(0.f, -this->movementSpeed);
-        this->current = 4;
-        this->loadTexture();
-        check = true;
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) ||
-             sf::Keyboard::isKeyPressed(sf::Keyboard::Down)){
-
-        if (check){
-            float change = 1 - 0.5 * sqrt(2);
-            int i = pow(-1, current % 2);
-            this->character.move(i * change * movementSpeed, 0.f);
-        }
-        this->character.move(0.f, this->movementSpeed);
-        this->current = 5;
-        this->loadTexture();
-        check = true;
-    }
-
-    if (!check && current > 3)
-        current -= 4;
 
     shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
                        this->character.getGlobalBounds().top + 6 * this->character.getGlobalBounds().height/7);
@@ -97,6 +118,7 @@ void Player::update(const sf::RenderWindow * target, sf::Vector2f gunTarget) {
 
     // Keyboard input
     this->updateInput();
+    this->updateAnimations();
 
     // Gun direction
     this->updateGun(gunTarget);

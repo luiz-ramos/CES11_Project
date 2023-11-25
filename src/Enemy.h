@@ -14,6 +14,8 @@ private:
 
     // Private functions
     void initVars(int difficulty);
+    void shootCycle(std::vector<sf::Sprite> * bullets);
+    void updateEnemyDir();
 public:
 
     // Constructors and Destructors
@@ -25,7 +27,7 @@ public:
     sf::Sprite getCharSprite() const&;
 
     // Functions
-    void shootCycle(std::vector<sf::Sprite> * bullets);
+    void updateEnemy(const sf::Vector2f playerTarget, std::vector<sf::Sprite> * enemyBullets);
 };
 
 
