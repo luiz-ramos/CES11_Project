@@ -6,6 +6,7 @@
 #define GAME_PROJECT_TREE_H
 
 #include <iostream>
+#include <fstream>
 #include <string>
 
 struct Tree{
@@ -17,6 +18,7 @@ struct Tree{
 
 Tree * make (int value, Tree * lChild = nullptr, Tree * rChild = nullptr);
 Tree * read(std::istream &stream);
-void print(Tree * root, std::ostream &stream);
+void printTree(const Tree * root, std::ostream &stream);
+void deleteTree(Tree * root);
 
 #endif //GAME_PROJECT_TREE_H

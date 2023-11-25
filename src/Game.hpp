@@ -14,11 +14,12 @@ private:
     sf::RenderWindow *window;
     sf::VideoMode videoMode;
     sf::Event ev;
-    sf::Texture mainBackground;
-    int bulletSpeed = 5.f;
+    int bulletSpeed;
+    bool exit;
 
     // Game state
     /*
+     * state = -1: menu
      * state = 0 : character creation
      * state = 1 : map navigation
      * state = 2 : level
@@ -35,12 +36,17 @@ private:
     sf::Vector2i mousePos;
     sf::Vector2f mousePosView;
 
-    // Sprites
+    // Sprites, Shapes and Text
     sf::Sprite background;
     sf::RectangleShape outline;
+    std::vector<sf::Text> * uiTexts;
     std::vector<sf::Sprite> * uiSprites;
     std::vector<sf::Sprite> * playerBullets;
     std::vector<sf::Sprite> * enemyBullets;
+
+    // Textures
+    sf::Texture worldBackground;
+    sf::Texture levelBackground;
     std::vector<sf::Texture> * mugshots;
 
     // Text specific
@@ -55,20 +61,27 @@ private:
     void initTree();
 
     // Update functions
-    void updateOutline();
+    void reset();
+    template <typename T>
+    void updateOutline(T * objectsVector);
     void updateMousePos();
     void updateBullets();
     bool updateBulletCollisions(sf::Sprite * bullet);
 
     // Render functions
-    void renderVector(std::vector<sf::Sprite> * spriteVector);
+    template <typename T>
+    void renderVector(T * objectsVector);
 
     // UI related
-    void setCharacter();
+    void initMenu();
+    void initExit();
+    void save();
     void displayChars(std::string path, int scale);
 
     // Polling
     void pollEvents();
+    int pollUiChoices();
+    int pollExit();
     void pollCharacterChoice();
 public:
 
