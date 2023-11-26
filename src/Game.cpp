@@ -12,8 +12,10 @@ void Game::initGameVars() {
     this->playerBullets = new std::vector<sf::Sprite>;
     this->enemyBullets = new std::vector<sf::Sprite>;
     this->textures = new std::vector<sf::Texture>;
+    this->nodesPos = new std::vector<sf::Vector2f>;
 
     this->bulletSpeed = 5.f;
+    this->currentLevel = 0;
     this->exit = false;
 
     textures->reserve(5);
@@ -56,8 +58,14 @@ void Game::initTree() {
                            );
 
     // Since choices were not made yet
-    this->characterChoice = false;
-    this->gunChoice = false;
+    this->choice1 = false;
+    this->choice2 = false;
+}
+
+void Game::initNodesPos() {
+    std::vector<sf::Vector2f> v{{612, 567}, {431, 567}, {431, 541}, {335, 541}, {335, 420}, {298, 420}, {298, 442}, {400, 420}, {400, 302}, {494, 302}, {400, 229}, {340, 229}, {340, 160}, {300, 229}, {212, 229}, {212, 94},{172, 229}, {172, 320},{128, 320},{128, 442}};
+    for (int i = 0; i < v.size(); i++)
+        this->nodesPos->push_back(v[i]);
 }
 
 // Update functions
@@ -72,8 +80,8 @@ void Game::reset() {
     while (!this->enemyBullets->empty())
         this->enemyBullets->pop_back();
 
-    characterChoice = false;
-    gunChoice = false;
+    choice1 = false;
+    choice2 = false;
 }
 
 template <typename T>
@@ -91,6 +99,27 @@ void Game::updateOutline(T * objectsVector) {
 
     if (!check)
         outline.setOutlineColor(sf::Color::Transparent);
+}
+
+void Game::walk(int targetLevel) {
+    std::vector<int> path = gameMap.dijkstra(this->currentLevel, targetLevel);
+    for (int i = 1; i < path.size(); i++){
+        this->currentLevel = path[i];
+        this->player->moveTowards(this->nodesPos->at(this->currentLevel));
+
+        while (this->player->getCharacter().getPosition() != this->nodesPos->at(this->currentLevel)){
+            this->window->clear();
+
+            this->player->moveTowards(this->nodesPos->at(this->currentLevel));
+            this->player->update(this->window, mousePosView);
+
+            this->window->draw(background);
+            this->renderVector(uiSprites);
+            this->player->render(this->window);
+
+            this->window->display();
+        };
+    }
 }
 
 void Game::updateMousePos() {
@@ -189,6 +218,33 @@ void Game::initExit() {
     this->uiTexts->push_back(no);
 }
 
+void Game::switchToMap() {
+    float width = this->player->getCharacter().getGlobalBounds().width;
+    float height = this->player->getCharacter().getGlobalBounds().height;
+    sf::Vector2f adjust = sf::Vector2f {width/2, height/2};
+    background.setTexture(worldBackground);
+
+    switch (this->currentLevel){
+        case 0:
+            this->player->changePos(this->nodesPos->at(0) - adjust);
+            break;
+        case 1:
+            this->player->changePos(this->nodesPos->at(9) - adjust);
+            break;
+        case 2:
+            this->player->changePos(this->nodesPos->at(12) - adjust);
+            break;
+        case 3:
+            this->player->changePos(this->nodesPos->at(15) - adjust);
+            break;
+        case 4:
+            this->player->changePos(this->nodesPos->at(19) - adjust);
+            break;
+    }
+
+    this->statsTree->value = 1;
+}
+
 void Game::save() {
     std::ofstream file;
     file.open("../../src/saves/save.txt", std::ios::out);
@@ -272,17 +328,17 @@ void Game::pollEvents() {
                         case 0:
                             // Character creation
                             this->pollCharacterChoice();
-                            if (characterChoice && gunChoice){
-                                this->statsTree->value = 2;
+                            if (choice1 && choice2){
                                 this->player = new Player(this->statsTree->lChild->value,
                                                           this->statsTree->rChild->value,
                                                           364, 364);
-                                this->background.setTexture(levelBackground);
+                                this->switchToMap();
                             }
 
                             break;
                         case 1:
                             // Map navigation
+//                            this->pollMapChoice();
 
                             break;
                         case 2:
@@ -322,19 +378,43 @@ int Game::pollUiChoices() {
     return 5;
 }
 
+void Game::pollMapChoice() {
+    for (int i = 0; i < uiShapes->size(); i++){
+        if (uiShapes->at(i).getGlobalBounds().contains(this->mousePosView)){
+            switch (i) {
+                case 0:
+                    this->walk(1);
+                    break;
+                case 1:
+                    this->walk(10);
+                    break;
+                case 2:
+                    this->walk(13);
+                    break;
+                case 3:
+                    this->walk(16);
+                    break;
+                case 4:
+                    this->walk(20);
+                    break;
+            }
+        }
+    }
+}
+
 void Game::pollCharacterChoice() {
     int choice = 0;
     auto itr = uiSprites->begin();
 
     for (itr; itr < uiSprites->end(); itr++) {
         if ((*itr).getGlobalBounds().contains(this->mousePosView)) {
-            if (!characterChoice) {
-                characterChoice = true;
+            if (!choice1) {
+                choice1 = true;
                 statsTree->lChild = new Tree{choice, nullptr};
                 text.move(50.f, 0.f);
             }
             else {
-                gunChoice = true;
+                choice2 = true;
                 statsTree->rChild = new Tree{choice, nullptr};
             }
 
@@ -343,7 +423,7 @@ void Game::pollCharacterChoice() {
             while (!uiSprites->empty())
                 uiSprites->pop_back();
 
-            if (!gunChoice) {
+            if (!choice2) {
                 displayChars("../../src/sprites/gun", 10);
                 text.setString("CHOOSE YOUR GUN");
             }
@@ -360,6 +440,7 @@ Game::Game() {
     this->initTextures();
     this->initFont();
     this->initMenu();
+    this->initNodesPos();
 
     firstEnemy = new Enemy(0, 1, 1, 100, 600);
 }
@@ -394,6 +475,7 @@ void Game::updateGame() {
 
             break;
         case 1:
+            this->player->updateAnimations();
 
             break;
         case 2:
@@ -413,7 +495,7 @@ void Game::renderGame() {
     switch (statsTree->value) {
         case -1:
             // Render UI features
-            this->renderVector <std::vector<sf::Text>>(uiTexts);
+            this->renderVector <std::vector<sf::Text>> (uiTexts);
             break;
         case 0:
             // Render UI features
@@ -425,6 +507,9 @@ void Game::renderGame() {
         case 1:
             // Draw background
             this->window->draw(background);
+
+            // Draw UI elements;
+//            this->renderVector <std::vector<sf::Shape>> (uiShapes);
 
             // Draw player
             this->player->render(this->window);

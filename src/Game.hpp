@@ -8,6 +8,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Tree.h"
+#include "Graph.hpp"
 
 class Game {
 private:
@@ -25,8 +26,15 @@ private:
      * state = 2 : level
      */
     Tree * statsTree;
-    bool characterChoice;
-    bool gunChoice;
+    bool choice1;
+    bool choice2;
+
+    // Levels
+    std::vector<sf::Vector2f> * nodesPos;
+    GameMap gameMap;
+    GameLevels gameLevels;
+    int currentLevel;
+    bool movingTo;
 
     // Game Objects
     Player * player;
@@ -40,6 +48,7 @@ private:
     sf::Sprite background;
     sf::RectangleShape outline;
     std::vector<sf::Text> * uiTexts;
+    std::vector<sf::Shape> * uiShapes;
     std::vector<sf::Sprite> * uiSprites;
     std::vector<sf::Sprite> * playerBullets;
     std::vector<sf::Sprite> * enemyBullets;
@@ -59,11 +68,13 @@ private:
     void initTextures();
     void initFont();
     void initTree();
+    void initNodesPos();
 
     // Update functions
     void reset();
     template <typename T>
     void updateOutline(T * objectsVector);
+    void walk(int targetLevel);
     void updateMousePos();
     void updateBullets();
     bool updateBulletCollisions(sf::Sprite * bullet);
@@ -75,13 +86,14 @@ private:
     // UI related
     void initMenu();
     void initExit();
+    void switchToMap();
     void save();
     void displayChars(std::string path, int scale);
 
     // Polling
     void pollEvents();
     int pollUiChoices();
-    int pollExit();
+    void pollMapChoice();
     void pollCharacterChoice();
 public:
 

@@ -19,6 +19,7 @@ add_executable(AirportIncursion src/main.cpp src/Game.cpp src/Game.hpp src/Game.
         src/Character.cpp
         src/Tree.h
         src/Tree.cpp
+        src/Graph.cpp
 )
 target_link_libraries(AirportIncursion PRIVATE sfml-graphics)
 target_compile_features(AirportIncursion PRIVATE cxx_std_17)

@@ -17,6 +17,34 @@ Player::~Player() {
 }
 
 // Functions
+void Player::goTowards(sf::Vector2f targetPos) {
+    this->resetAnimationTimer();
+    if (targetPos.x > this->character.getGlobalBounds().getPosition().x)
+        this->animationState = ANIMATION_STATES::RUN_FRONT_RIGHT;
+    else if (targetPos.x < this->character.getGlobalBounds().getPosition().x)
+        this->animationState = ANIMATION_STATES::RUN_FRONT_LEFT;
+
+    if (targetPos.y > this->character.getGlobalBounds().getPosition().y)
+        this->animationState = ANIMATION_STATES::RUN_BACK;
+    else if (targetPos.y < this->character.getGlobalBounds().getPosition().y)
+        this->animationState = ANIMATION_STATES::RUN_FRONT;
+}
+
+void Player::moveTowards(sf::Vector2f targetPos) {
+    float x = targetPos.x - this->character.getPosition().x;
+    float y = targetPos.y - this->character.getPosition().y;
+
+    float dir = sqrt(pow(x,2) + pow(y,2));
+    x /= dir;
+    y /= dir;
+
+    this->character.move(this->movementSpeed * x, this->movementSpeed * y);
+}
+
+void Player::changePos(sf::Vector2f targetPos) {
+    this->character.setPosition(targetPos);
+}
+
 void Player::updateInput() {
     float factor = sqrt(2)/2;
     bool up = sf::Keyboard::isKeyPressed(sf::Keyboard::W) ||
