@@ -47,7 +47,7 @@ private:
     // Textures
     sf::Texture worldBackground;
     sf::Texture levelBackground;
-    std::vector<sf::Texture> * mugshots;
+    std::vector<sf::Texture> * textures;
 
     // Text specific
     sf::Font font;

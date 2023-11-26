@@ -15,8 +15,15 @@
 #include <cmath>
 #include <iostream>
 
+enum ANIMATION_STATES {IDLE_FRONT, IDLE_BACK, IDLE_FRONT_RIGHT, IDLE_FRONT_LEFT, IDLE_BACK_RIGHT, IDLE_BACK_LEFT,
+    RUN_FRONT, RUN_BACK, RUN_FRONT_RIGHT, RUN_FRONT_LEFT, RUN_BACK_RIGHT, RUN_BACK_LEFT};
+
 class Character {
 protected:
+    sf::Clock animationTimer;
+    short animationState;
+    bool animationSwitch;
+
     sf::Sprite character;
     std::vector<sf::Texture> * characterTextures;
 
@@ -36,7 +43,10 @@ protected:
     void initVars();
     void initCharTexture(int charId);
     void initGunTexture(int GunId);
-
+    void flipSprite();
+    void unFlipSprite();
+    void loadTexture();
+    void updateTexture(int begin, int end);
 public:
     Character(int characterId, int gunId, float x = 0.f, float y = 0.f);
     ~Character();
@@ -46,8 +56,11 @@ public:
     sf::Sprite getGun() const&;
     sf::Texture getBulletTexture() const&;
     int getHealth() const&;
+    bool getAnimSwitch();
 
     // Functions
+    void resetAnimationTimer();
+    void updateAnimations();
     void updateStats(int healthUp, int damageUp);
     void updateGun(sf::Vector2f target);
     void fireGun(std::vector<sf::Sprite> * bullets);
