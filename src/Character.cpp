@@ -103,6 +103,7 @@ Character::Character(int characterId, int gunId, float x, float y) {
 
 Character::~Character() {
     delete characterTextures;
+    std::cout << "WRKD\n";
 }
 
 // Accessors

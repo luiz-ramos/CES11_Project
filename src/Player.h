@@ -18,6 +18,10 @@ public:
 
     // Functions
     void update(const sf::RenderWindow * target, sf::Vector2f gunTarget);
+    void goTowards(sf::Vector2f targetPos);
+    void changeSpeed(float newSpeed);
+    void moveTowards(sf::Vector2f targetPos);
+    void changePos(sf::Vector2f targetPos);
     void updateInput();
     void updateCollisions(const sf::RenderTarget * target);
 };
