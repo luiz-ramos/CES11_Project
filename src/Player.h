@@ -5,51 +5,25 @@
 #ifndef GAME_PROJECT_PLAYER_H
 #define GAME_PROJECT_PLAYER_H
 
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
-#include <SFML/Audio.hpp>
-#include <vector>
-#include <filesystem>
-#include <string>
-#include <cmath>
-#include <iostream>
+#include "Character.h"
 
-class Player {
-private:
-    sf::Sprite player;
-    sf::Sprite gun;
-    std::vector<sf::Texture> * textures;
-    sf::Texture gunTexture;
-    int current;
-    int health;
+class Player : public Character{
+protected:
     float movementSpeed;
 
-    // Mouse position
-    sf::Vector2i mousePos;
-    sf::Vector2f mousePosView;
-
-    // Player position
-    sf::Vector2f pos;
-
-    // Private functions
-    void initVars();
-    void initTexture();
-    void loadTexture();
-
 public:
-
     // Constructors and Destructors
-    Player(float x = 0.f, float y = 0.f);
+    Player(int playerID, int gunId, float x = 0.f, float y = 0.f);
     ~Player();
 
     // Functions
-    void update(const sf::RenderWindow * target);
+    void update(const sf::RenderWindow * target, sf::Vector2f gunTarget);
+    void goTowards(sf::Vector2f targetPos);
+    void changeSpeed(float newSpeed);
+    void moveTowards(sf::Vector2f targetPos);
+    void changePos(sf::Vector2f targetPos);
     void updateInput();
-    void updateMousePos(const sf::RenderWindow * target);
-    void updateGun();
-    void updateColiisions();
-    void render(sf::RenderTarget * target);
+    void updateCollisions(const sf::RenderTarget * target);
 };
 
 

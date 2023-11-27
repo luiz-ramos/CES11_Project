@@ -6,23 +6,99 @@
 #define GAME_PROJECT_GAME_HPP
 
 #include "Player.h"
+#include "Enemy.h"
+#include "Tree.h"
+#include "Graph.hpp"
 
 class Game {
 private:
     sf::RenderWindow *window;
     sf::VideoMode videoMode;
     sf::Event ev;
-    sf::Texture mainBackground;
+    int bulletSpeed;
+    bool exit;
+
+    // Game state
+    /*
+     * state = -1: menu
+     * state = 0 : character creation
+     * state = 1 : map navigation
+     * state = 2 : level
+     */
+    Tree * statsTree;
+    bool choice1;
+    bool choice2;
+
+    // Levels
+    std::vector<sf::Vector2f> * nodesPos;
+    GameMap * gameMap;
+    std::vector<Enemy> * enemies;
+    int currentLevel;
+    bool movingTo;
 
     // Game Objects
+    Player * player;
+    std::vector<Enemy> currentEnemies;
+
+    // Mouse position
+    sf::Vector2i mousePos;
+    sf::Vector2f mousePosView;
+
+    // Sprites, Shapes and Text
     sf::Sprite background;
-    Player player;
+    sf::RectangleShape outline;
+    std::vector<sf::Text> * uiTexts;
+    std::vector<sf::CircleShape> * uiShapes;
+    std::vector<sf::Sprite> * uiSprites;
+    std::vector<sf::Sprite> * playerBullets;
+    std::vector<sf::Sprite> * enemyBullets;
 
-    // Private functions
-    void initVars();
+    // Textures
+    sf::Texture worldBackground;
+    sf::Texture levelBackground;
+    std::vector<sf::Texture> * textures;
+
+    // Text specific
+    sf::Font font;
+    sf::Text text;
+
+    // Initializers
+    void initGameVars();
+    void initEnemies();
     void initWindow();
-    void initBackground();
+    void initTextures();
+    void initFont();
+    void initTree();
+    void initNodesPos();
+    void initShapes();
 
+    // Update functions
+    void reset();
+    template <typename T>
+    void updateOutline(T * objectsVector);
+    void walk(int targetLevel);
+    void updateCurrentEnemies();
+    void updateMousePos();
+    void updateBullets();
+    bool updateBulletCollisions(sf::Sprite * bullet);
+
+    // Render functions
+    template <typename T>
+    void renderVector(T * objectsVector);
+
+    // UI related
+    void initMenu();
+    void initExit();
+    void switchToMap();
+    int levelToPos(int level);
+    void save();
+    void displayChars(std::string path, int scale);
+
+    // Polling
+    void pollEvents();
+    int pollUiChoices();
+    void pollMapChoice();
+    void pollCharacterChoice();
 public:
 
     // Constructor and destructor
@@ -33,10 +109,8 @@ public:
     bool running() const&;
 
     // Functions
-
-    void pollEvents();
-    void update();
-    void render();
+    void updateGame();
+    void renderGame();
 };
 
 

@@ -6,154 +6,163 @@
 #define PI 3.14159265
 
 
-// Private functions
-
-void Player::initVars() {
-    this->health = 100;
-
-    this->movementSpeed = 5.f;
-}
-
-void Player::initTexture() {
-    textures = new std::vector<sf::Texture>;
-    std::string path = "../../src/sprites/marine";
-
-    // Save all character sprites into a vector
-
-    for (const auto &entry : std::filesystem::directory_iterator(path)){
-        sf::Texture fileTexture;
-        fileTexture.loadFromFile(entry.path().string());
-        this->textures->push_back(fileTexture);
-    }
-
-    // Set initial sprite
-
-    current = 1;
-
-    this->player.setTexture(textures->at(current));
-    this->player.setScale(2,2);
-
-    // Gun texture
-    this->gunTexture.loadFromFile("../../src/sprites/gun/m16_gl_fire_001.png");
-    this->gun.setTexture(this->gunTexture);
-    this->gun.setScale(2,2);
-    this->gun.setRotation(90.f);
-}
-
-void Player::loadTexture() {
-    this->player.setTexture(textures->at(this->current));
-}
-
 // Constructors and Destructors
-
-Player::Player(float x, float y) {
-
-    this->player.setPosition(x,y);
-    this->gun.setPosition(x,y);
-    this->gun.move(this->player.getGlobalBounds().width/2, this->player.getGlobalBounds().height/2);
-
-    this->initVars();
-    this->initTexture();
+Player::Player(int playerID, int gunId, float x, float y) : Character(playerID, gunId, x, y){
+    movementSpeed = 3.f;
+    this->animationTimer.restart();
 }
 
 Player::~Player() {
-    delete textures;
+    delete characterTextures;
 }
 
 // Functions
+void Player::goTowards(sf::Vector2f targetPos) {
+    this->resetAnimationTimer();
+    this->unFlipSprite();
+    if (targetPos.x > this->character.getGlobalBounds().getPosition().x)
+        this->animationState = ANIMATION_STATES::RUN_FRONT_RIGHT;
+    else if (targetPos.x < this->character.getGlobalBounds().getPosition().x){
+        this->animationState = ANIMATION_STATES::RUN_FRONT_LEFT;
+        this->flipSprite();
+    }
+
+
+    if (targetPos.y < this->character.getGlobalBounds().getPosition().y)
+        this->animationState = ANIMATION_STATES::RUN_BACK;
+    else if (targetPos.y > this->character.getGlobalBounds().getPosition().y)
+        this->animationState = ANIMATION_STATES::RUN_FRONT;
+}
+
+void Player::changeSpeed(float newSpeed) {
+    movementSpeed = newSpeed;
+}
+
+void Player::moveTowards(sf::Vector2f targetPos) {
+    float x = targetPos.x - this->character.getPosition().x;
+    float y = targetPos.y - this->character.getPosition().y;
+
+    float dir = sqrt(pow(x,2) + pow(y,2));
+    x /= dir;
+    y /= dir;
+
+    this->character.move(this->movementSpeed * x, this->movementSpeed * y);
+    shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
+                       this->character.getGlobalBounds().top + 6 * this->character.getGlobalBounds().height/7);
+}
+
+void Player::changePos(sf::Vector2f targetPos) {
+    this->character.setPosition(targetPos);
+    shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
+                       this->character.getGlobalBounds().top + 6 * this->character.getGlobalBounds().height/7);
+}
 
 void Player::updateInput() {
-    bool check = false;
+    float factor = sqrt(2)/2;
+    bool up = sf::Keyboard::isKeyPressed(sf::Keyboard::W) ||
+              sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
+    bool down = sf::Keyboard::isKeyPressed(sf::Keyboard::S) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
+    bool left = sf::Keyboard::isKeyPressed(sf::Keyboard::A) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::Left);
+    bool right = sf::Keyboard::isKeyPressed(sf::Keyboard::D) ||
+                 sf::Keyboard::isKeyPressed(sf::Keyboard::Right);
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+    if (this->animationState == ANIMATION_STATES::RUN_FRONT_LEFT ||
+        this->animationState == ANIMATION_STATES::RUN_BACK_LEFT ||
+        this->animationState == ANIMATION_STATES::IDLE_FRONT_LEFT||
+        this->animationState == ANIMATION_STATES::IDLE_BACK_LEFT)
 
-        this->player.move(-this->movementSpeed, 0.f);
-        this->current = 6;
-        this->player.setScale(2,2);
-        this->loadTexture();
-        check = true;
-    }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) ||
-             sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
+    {this->unFlipSprite();}
 
-        this->player.move(this->movementSpeed, 0.f);
-        this->current = 7;
-        this->player.setScale(2,2);
-        this->loadTexture();
-        check = true;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Up)){
-
-        if (check){
-            this->player.move(this->movementSpeed, 0.f);
+    if (up){
+        if (right){
+            this->animationState = ANIMATION_STATES::RUN_BACK_RIGHT;
+            this->character.move(factor * this->movementSpeed, -factor* this->movementSpeed);
         }
-        this->player.move(0.f, -this->movementSpeed);
-        this->current = 4;
-        this->player.setScale(2,2);
-        this->loadTexture();
-        check = true;
+        else if (left){
+            this->animationState = ANIMATION_STATES::RUN_BACK_LEFT;
+            this->character.move(-factor * this->movementSpeed, -factor* this->movementSpeed);
+        }
+        else{
+            this->animationState = ANIMATION_STATES::RUN_BACK;
+            this->character.move(0.f, -this->movementSpeed);
+        }
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) ||
-             sf::Keyboard::isKeyPressed(sf::Keyboard::Down)){
-
-        this->player.move(0.f, this->movementSpeed);
-        this->current = 5;
-        this->player.setScale(2,2);
-        this->loadTexture();
-        check = true;
+    else if (down) {
+        if (right) {
+            this->animationState = ANIMATION_STATES::RUN_FRONT_RIGHT;
+            this->character.move(factor * this->movementSpeed, factor * this->movementSpeed);
+        } else if (left) {
+            this->animationState = ANIMATION_STATES::RUN_FRONT_LEFT;
+            this->character.move(-factor * this->movementSpeed, factor * this->movementSpeed);
+        } else {
+            this->animationState = ANIMATION_STATES::RUN_FRONT;
+            this->character.move(0.f, this->movementSpeed);
+        }
+    }
+    else if (right){
+        this->animationState = ANIMATION_STATES::RUN_FRONT_RIGHT;
+        this->character.move(this->movementSpeed, 0.f);
+    }
+    else if (left){
+        this->animationState = ANIMATION_STATES::RUN_FRONT_LEFT;
+        this->character.move(-this->movementSpeed, 0.f);
+    }
+    else{
+        switch (animationState){
+            case ANIMATION_STATES::RUN_FRONT_RIGHT:
+                this->animationState = ANIMATION_STATES::IDLE_FRONT_RIGHT;
+                break;
+            case ANIMATION_STATES::RUN_FRONT_LEFT:
+                this->animationState = ANIMATION_STATES::IDLE_FRONT_LEFT;
+                break;
+            case ANIMATION_STATES::RUN_FRONT:
+                this->animationState = ANIMATION_STATES::IDLE_FRONT;
+                break;
+            case ANIMATION_STATES::RUN_BACK_RIGHT:
+                this->animationState = ANIMATION_STATES::IDLE_BACK_RIGHT;
+                break;
+            case ANIMATION_STATES::RUN_BACK_LEFT:
+                this->animationState = ANIMATION_STATES::IDLE_BACK_LEFT;
+                break;
+            case ANIMATION_STATES::RUN_BACK:
+                this->animationState = ANIMATION_STATES::IDLE_BACK;
+                break;
+        }
     }
 
-    if (!check && current > 3)
-        current-=4;
+    shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
+                       this->character.getGlobalBounds().top + 6 * this->character.getGlobalBounds().height/7);
 }
 
-void Player::updateMousePos(const sf::RenderWindow *target) {
-    this->mousePos = sf::Mouse::getPosition(*target);
-    this->mousePosView = target->mapPixelToCoords(this->mousePos);
+void Player::updateCollisions(const sf::RenderTarget * target) {
+    sf::FloatRect playerBounds = this->character.getGlobalBounds();
+
+    if (playerBounds.top <= 45.f)
+        this->character.setPosition(playerBounds.left, 45.f);
+
+    else if (playerBounds.top + playerBounds.height >= target->getSize().y - 45.f)
+        this->character.setPosition(playerBounds.left, target->getSize().y - playerBounds.height - 45.f);
+
+    if (playerBounds.left <= 45.f)
+        this->character.setPosition(45.f, playerBounds.top);
+
+    else if (playerBounds.left + playerBounds.width >= target->getSize().x - 45.f)
+        this->character.setPosition(target->getSize().x - playerBounds.width - 45.f, playerBounds.top);
+
+
 }
 
-void Player::updateGun() {
-    this->gun.setPosition(this->player.getGlobalBounds().left,this->player.getGlobalBounds().top);
-
-    sf::Vector2f dir = mousePosView - this->player.getPosition();
-    float x = dir.x;
-    float y = dir.y;
-
-    dir.x /= pow(pow(x,2) + pow(y,2) , 0.5);
-    dir.y /= pow(pow(x,2) + pow(y,2) , 0.5);
-
-    x = dir.x;
-    y = dir.y;
-
-    float angle = acos(x) * 180/PI;
-
-    if (y < 0)
-        this->gun.setRotation(-angle);
-    else
-        this->gun.setRotation(angle);
-
-    this->gun.move(this->player.getGlobalBounds().width/4, this->player.getGlobalBounds().height/2);
-}
-
-void Player::update(const sf::RenderWindow * target) {
-
-
-    // Bounds collision
+void Player::update(const sf::RenderWindow * target, sf::Vector2f gunTarget) {
 
     // Keyboard input
-    updateInput();
-
-    // Mouse Positions
-    updateMousePos(target);
+    this->updateInput();
+    this->updateAnimations();
 
     // Gun direction
-    updateGun();
-}
+    this->updateGun(gunTarget);
 
-void Player::render(sf::RenderTarget *target) {
-    target->draw(this->player);
-    target->draw(this->gun);
+    // Collisions
+    updateCollisions(target);
 }

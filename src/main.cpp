@@ -3,17 +3,16 @@
 
 int main()
 {
-    // Initialize game
     Game game;
 
     // Game loop
     while (game.running()){
 
         // update
-        game.update();
+        game.updateGame();
 
         // render
-        game.render();
+        game.renderGame();
     }
 
     return 0;
