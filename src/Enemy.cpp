@@ -5,8 +5,10 @@
 #include "Enemy.h"
 
 // Private functions
-void Enemy::initVars(int difficulty) {
-    this->enemyLevel = difficulty;
+void Enemy::initVars(int enemyLevel_, int characterId_, int gunId_) {
+    this->enemyLevel = enemyLevel_;
+    this->characterId = characterId_;
+    this->gunId = gunId_;
     this->timer = 0;
 
     this->shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
@@ -45,15 +47,23 @@ void Enemy::updateEnemyDir() {
 }
 
 // Constructor
-Enemy::Enemy(int difficulty, int characterId, int gunId,
-             float x, float y) : Character(characterId, gunId, x, y){
+Enemy::Enemy(int enemyLevel_, int characterId_, int gunId_,
+             float x, float y) : Character(characterId_, gunId_, x, y){
 
-    this->initVars(difficulty);
+    this->initVars(enemyLevel_, characterId_, gunId_);
 }
 
 // Accessors
-sf::Sprite Enemy::getCharSprite() const &{
-    return this->character;
+int Enemy::getEnemyLevel() const &{
+    return enemyLevel;
+}
+
+int Enemy::getCharacterId() const &{
+    return characterId;
+}
+
+int Enemy::getGunId() const &{
+    return gunId;
 }
 
 // Functions

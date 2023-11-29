@@ -16,6 +16,7 @@ void Game::initGameVars() {
     this->uiShapes = new std::vector<sf::CircleShape>;
     this->gameMap = new GameMap();
     this->enemies = new std::vector<Enemy>;
+    this->currentEnemies = new std::vector<Enemy>;
 
     this->bulletSpeed = 5.f;
     this->currentLevel = 0;
@@ -23,6 +24,7 @@ void Game::initGameVars() {
 
     textures->reserve(5);
     this->enemies->reserve(5);
+    this->currentEnemies->reserve(5);
 }
 
 void Game::initEnemies() {
@@ -119,6 +121,8 @@ void Game::reset() {
         this->playerBullets->pop_back();
     while (!this->enemyBullets->empty())
         this->enemyBullets->pop_back();
+    while (!this->uiShapes->empty())
+        this->uiShapes->pop_back();
 
     choice1 = false;
     choice2 = false;
@@ -179,11 +183,11 @@ void Game::walk(int targetLevel) {
 }
 
 void Game::updateCurrentEnemies() {
-    while (!this->currentEnemies.empty())
-        this->currentEnemies.pop_back();
+    while (!this->currentEnemies->empty())
+        this->currentEnemies->pop_back();
 
     for (int i = 0; i < this->currentLevel + 1; i++)
-        currentEnemies.push_back(this->enemies->at(i));
+        this->currentEnemies->push_back(this->enemies->at(i));
 }
 
 void Game::updateMousePos() {
@@ -198,12 +202,19 @@ void Game::updateBullets() {
         sf::Sprite * bullet = &*itr;
         float angle = (*bullet).getRotation() * PI/180;
 
-        auto itr2 = this->currentEnemies.begin();
-        for (itr2; itr2 < this->currentEnemies.end(); itr2++)
+        auto itr2 = this->currentEnemies->begin();
+        for (itr2; itr2 < this->currentEnemies->end(); itr2++)
             if ((*itr).getGlobalBounds().intersects((*itr2).getCharacter().getGlobalBounds())){
                 this->playerBullets->erase(itr);
                 (*itr2).updateStats(-1,0);
             }
+
+        float xUp = this->window->getSize().x;
+        float yUp = this->window->getSize().y;
+
+        if ((*itr).getPosition().x > xUp || (*itr).getPosition().x < 0.f ||
+            (*itr).getPosition().y > yUp || (*itr).getPosition().y < 0.f)
+            this->playerBullets->erase(itr);
 
 
         (*bullet).move(bulletSpeed * cos(angle), bulletSpeed * sin(angle));
@@ -220,26 +231,15 @@ void Game::updateBullets() {
             this->player->updateStats(-1,0);
         }
 
+        float xUp = this->window->getSize().x;
+        float yUp = this->window->getSize().y;
+
+        if ((*itr).getPosition().x > xUp || (*itr).getPosition().x < 0.f ||
+            (*itr).getPosition().y > yUp || (*itr).getPosition().y < 0.f)
+            this->enemyBullets->erase(itr);
+
         (*bullet).move(bulletSpeed * cos(angle), bulletSpeed * sin(angle));
     }
-}
-
-bool Game::updateBulletCollisions(sf::Sprite * bullet) {
-    sf::FloatRect playerBounds = bullet->getGlobalBounds();
-
-    if (playerBounds.left <= 0.f)
-        return true;
-
-    else if (playerBounds.left + playerBounds.width >= window->getSize().x)
-        return true;
-
-    if (playerBounds.top <= 0.f)
-        return true;
-
-    else if (playerBounds.top + playerBounds.height >= window->getSize().y)
-        return true;
-
-    return false;
 }
 
 // Render functions
@@ -314,7 +314,6 @@ void Game::switchToMap() {
             break;
     }
 
-    this->initShapes();
     this->player->changeSpeed(2.f);
     this->statsTree->value = 1;
 }
@@ -332,8 +331,8 @@ int Game::levelToPos(int level) {
         case 4:
             return 19;
         default:
-            std::cout << "ERROR";
-            std::cout << level << '\n';
+            std::cout << "ERROR ";
+            std::cout << this->uiShapes->size() << ' ' << this->currentLevel;
             break;
     }
 }
@@ -426,6 +425,7 @@ void Game::pollEvents() {
                                                               364, 364);
                                     this->background.setTexture(levelBackground);
                                     this->switchToMap();
+                                    this->initShapes();
                                     break;
                             }
                             break;
@@ -437,6 +437,7 @@ void Game::pollEvents() {
                                                           this->statsTree->rChild->value,
                                                           364, 364);
                                 this->switchToMap();
+                                this->initShapes();
                             }
 
                             break;
@@ -574,14 +575,24 @@ void Game::updateGame() {
             if (!exit){
                 this->updateBullets();
 
-                auto itr = this->currentEnemies.begin();
-                for (itr; itr < this->currentEnemies.end(); itr++){
-                    (*itr).updateEnemy(this->player->getCharacter().getPosition(), enemyBullets);
-                    if ((*itr).getHealth() <= 0)
-                        this->currentEnemies.erase(itr);
+                for (int i = 0; i < this->currentEnemies->size(); i++){
+                    this->currentEnemies->at(i).updateEnemy(this->player->getCharacter().getPosition(), enemyBullets);
+                    if (this->currentEnemies->at(i).getHealth() <= 0) {
+                        Enemy swapEnemy = Enemy(this->currentEnemies->back().getEnemyLevel(),
+                                                this->currentEnemies->back().getCharacterId(),
+                                                this->currentEnemies->back().getGunId(),
+                                                this->currentEnemies->back().getCharacter().getPosition().x,
+                                                this->currentEnemies->back().getCharacter().getPosition().y);
+
+                        this->currentEnemies->at(i) = swapEnemy;
+                        this->currentEnemies->pop_back();
+                    }
                 }
 
                 this->player->update(this->window, mousePosView);
+
+                if (this->currentEnemies->empty())
+                    this->switchToMap();
             }
             break;
     }
@@ -621,8 +632,8 @@ void Game::renderGame() {
             this->player->render(this->window);
 
             //Render Enemies
-            for (int i = 0; i < this->currentEnemies.size(); i++)
-                this->currentEnemies[i].render(this->window);
+            for (int i = 0; i < this->currentEnemies->size(); i++)
+                this->currentEnemies->at(i).render(this->window);
 
             // Render Bullets
             this->renderVector(playerBullets);

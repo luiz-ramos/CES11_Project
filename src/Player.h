@@ -14,7 +14,7 @@ protected:
 public:
     // Constructors and Destructors
     Player(int playerID, int gunId, float x = 0.f, float y = 0.f);
-    ~Player();
+    ~Player() = default;
 
     // Functions
     void update(const sf::RenderWindow * target, sf::Vector2f gunTarget);
