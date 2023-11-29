@@ -12,7 +12,6 @@ void Character::initVars() {
 
     this->health = 5;
     this->damage = 1;
-    this->characterTextures = new std::vector<sf::Texture>;
 }
 
 void Character::initCharTexture(int charId) {
@@ -28,11 +27,11 @@ void Character::initCharTexture(int charId) {
     for (const auto &entry : std::filesystem::directory_iterator(path)){
         sf::Texture fileTexture;
         fileTexture.loadFromFile(entry.path().string());
-        this->characterTextures->push_back(fileTexture);
+        this->characterTextures.push_back(fileTexture);
     }
 
     this->current = 12;
-    this->character.setTexture(characterTextures->at(current));
+    this->character.setTexture(characterTextures[this->current]);
     this->character.setScale(2, 2);
 
     shadowTexture.loadFromFile("../../src/sprites/characters/mr_shadow.png");
@@ -77,7 +76,7 @@ void Character::unFlipSprite() {
 }
 
 void Character::loadTexture() {
-    this->character.setTexture(characterTextures->at(this->current));
+    this->character.setTexture(characterTextures[this->current]);
 }
 
 void Character::updateTexture(int begin, int end) {
@@ -102,7 +101,6 @@ Character::Character(int characterId, int gunId, float x, float y) {
 }
 
 Character::~Character() {
-    delete characterTextures;
     std::cout << "WRKD\n";
 }
 

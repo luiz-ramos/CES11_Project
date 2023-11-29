@@ -12,10 +12,6 @@ Player::Player(int playerID, int gunId, float x, float y) : Character(playerID, 
     this->animationTimer.restart();
 }
 
-Player::~Player() {
-    delete characterTextures;
-}
-
 // Functions
 void Player::goTowards(sf::Vector2f targetPos) {
     this->resetAnimationTimer();

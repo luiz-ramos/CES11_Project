@@ -25,7 +25,7 @@ protected:
     bool animationSwitch;
 
     sf::Sprite character;
-    std::vector<sf::Texture> * characterTextures;
+    std::vector<sf::Texture> characterTextures;
 
     sf::Sprite shadow;
     sf::Texture shadowTexture;
@@ -47,6 +47,7 @@ protected:
     void unFlipSprite();
     void loadTexture();
     void updateTexture(int begin, int end);
+
 public:
     Character(int characterId, int gunId, float x = 0.f, float y = 0.f);
     ~Character();

@@ -10,21 +10,25 @@
 class Enemy : public Character{
 private:
     int enemyLevel;
+    int characterId;
+    int gunId;
     int timer;
 
     // Private functions
-    void initVars(int difficulty);
+    void initVars(int enemyLevel_, int characterId_, int gunId_);
     void shootCycle(std::vector<sf::Sprite> * bullets);
     void updateEnemyDir();
 public:
 
     // Constructors and Destructors
-    Enemy(int difficulty = 0, int characterId = 0, int gunId = 0,
+    Enemy(int enemyLevel_ = 0, int characterId_ = 0, int gunId_ = 0,
           float x = 0,  float y = 0);
     ~Enemy() = default;
 
     // Accessors
-    sf::Sprite getCharSprite() const&;
+    int getEnemyLevel() const&;
+    int getCharacterId() const&;
+    int getGunId() const&;
 
     // Functions
     void updateEnemy(const sf::Vector2f playerTarget, std::vector<sf::Sprite> * enemyBullets);

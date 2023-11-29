@@ -34,11 +34,10 @@ private:
     GameMap * gameMap;
     std::vector<Enemy> * enemies;
     int currentLevel;
-    bool movingTo;
 
     // Game Objects
     Player * player;
-    std::vector<Enemy> currentEnemies;
+    std::vector<Enemy> * currentEnemies;
 
     // Mouse position
     sf::Vector2i mousePos;
