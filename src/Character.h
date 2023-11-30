@@ -20,29 +20,38 @@ enum ANIMATION_STATES {IDLE_FRONT, IDLE_BACK, IDLE_FRONT_RIGHT, IDLE_FRONT_LEFT,
 
 class Character {
 protected:
+    // Animation Related
     sf::Clock animationTimer;
     short animationState;
     bool animationSwitch;
+    int currentIndex;
 
+    // Character sprite
     sf::Sprite character;
     std::vector<sf::Texture> characterTextures;
 
+    // Shadow
     sf::Sprite shadow;
     sf::Texture shadowTexture;
 
+    // Gun
     sf::Sprite gun;
     sf::Texture gunTexture;
-
     sf::Texture bulletTexture;
 
-    int current;
-    int health;
+    // HP related
+    int HPMax;
+    int HP;
+    sf::RectangleShape HPOutline;
+    sf::RectangleShape HPBar;
+
     int damage;
 
     // Private functions
     void initVars();
     void initCharTexture(int charId);
     void initGunTexture(int GunId);
+    void initHPBar();
     void flipSprite();
     void unFlipSprite();
     void loadTexture();
@@ -50,23 +59,25 @@ protected:
 
 public:
     Character(int characterId, int gunId, float x = 0.f, float y = 0.f);
-    ~Character();
+    ~Character() = default;
 
     // Accessors
     sf::Sprite getCharacter() const&;
     sf::Sprite getGun() const&;
     sf::Texture getBulletTexture() const&;
-    int getHealth() const&;
+    int getHP() const&;
+    int getMaxHP() const&;
     bool getAnimSwitch();
 
     // Functions
     void resetAnimationTimer();
     void updateAnimations();
-    void updateStats(int healthUp, int damageUp);
+    void updateHPBar();
+    void updateStats(int healthUp = 0, int damageUp = 0);
     void updateGun(sf::Vector2f target);
     void fireGun(std::vector<sf::Sprite> * bullets);
-    void bulletCollision(std::vector<sf::Sprite> * bullets);
     void render(sf::RenderTarget * target);
+    void mapRender(sf::RenderTarget * target);
 };
 
 

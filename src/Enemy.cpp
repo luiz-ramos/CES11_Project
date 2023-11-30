@@ -16,7 +16,7 @@ void Enemy::initVars(int enemyLevel_, int characterId_, int gunId_) {
 }
 
 void Enemy::shootCycle(std::vector<sf::Sprite> * bullets) {
-    if (timer == 50 && health > 0){
+    if (timer == 50 && HP > 0){
         this->fireGun(bullets);
         timer = 0;
     }
@@ -68,8 +68,16 @@ int Enemy::getGunId() const &{
 
 // Functions
 void Enemy::updateEnemy(const sf::Vector2f playerTarget, std::vector<sf::Sprite> * enemyBullets) {
+    // Updates the direction the enemy is facing
     this->updateEnemyDir();
+
+    // Animation
     this->updateAnimations();
+
+    // Health bar
+    this->updateHPBar();
+
+    // Gun related updates
     this->updateGun(playerTarget);
     this->shootCycle(enemyBullets);
 }

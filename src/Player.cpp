@@ -51,6 +51,10 @@ void Player::changePos(sf::Vector2f targetPos) {
     this->character.setPosition(targetPos);
     shadow.setPosition(this->character.getGlobalBounds().left + this->character.getGlobalBounds().width/4,
                        this->character.getGlobalBounds().top + 6 * this->character.getGlobalBounds().height/7);
+
+    this->unFlipSprite();
+    this->animationState = IDLE_FRONT_RIGHT;
+    this->resetAnimationTimer();
 }
 
 void Player::updateInput() {
@@ -155,6 +159,9 @@ void Player::update(const sf::RenderWindow * target, sf::Vector2f gunTarget) {
     // Keyboard input
     this->updateInput();
     this->updateAnimations();
+
+    // Health bar
+    this->updateHPBar();
 
     // Gun direction
     this->updateGun(gunTarget);

@@ -7,10 +7,12 @@
 
 // Private functions
 void Character::initVars() {
+    // Default animation state
     this->animationState = ANIMATION_STATES::IDLE_FRONT_RIGHT;
     this->animationSwitch = true;
 
-    this->health = 5;
+    this->HPMax = 5;
+    this->HP = 5;
     this->damage = 1;
 }
 
@@ -30,10 +32,12 @@ void Character::initCharTexture(int charId) {
         this->characterTextures.push_back(fileTexture);
     }
 
-    this->current = 12;
-    this->character.setTexture(characterTextures[this->current]);
+    // Sets idle texture index
+    this->currentIndex = 12;
+    this->character.setTexture(characterTextures[this->currentIndex]);
     this->character.setScale(2, 2);
 
+    // Sets shadow configurations
     shadowTexture.loadFromFile("../../src/sprites/characters/mr_shadow.png");
     shadow.setTexture(shadowTexture);
     shadow.setScale(2,2);
@@ -62,6 +66,19 @@ void Character::initGunTexture(int GunId) {
     }
 }
 
+void Character::initHPBar() {
+    this->HPOutline.setPosition(this->character.getPosition() - sf::Vector2f (0.f, 20.f));
+    this->HPBar.setPosition(this->character.getPosition() - sf::Vector2f (0.f, 20.f));
+
+    this->HPOutline.setSize(sf::Vector2f (this->character.getGlobalBounds().width,
+                                          10.f));
+    this->HPOutline.setFillColor(sf::Color::Black);
+
+    this->HPBar.setFillColor(sf::Color::Red);
+    this->HPBar.setOutlineColor(sf::Color::Yellow);
+    this->HPBar.setOutlineThickness(2.f);
+}
+
 void Character::flipSprite() {
     int width = this->character.getGlobalBounds().width;
     this->character.setScale(-2.f, 2.f);
@@ -76,14 +93,16 @@ void Character::unFlipSprite() {
 }
 
 void Character::loadTexture() {
-    this->character.setTexture(characterTextures[this->current]);
+    // Redefines the characters sprite's texture
+    this->character.setTexture(characterTextures[this->currentIndex]);
 }
 
 void Character::updateTexture(int begin, int end) {
+    // Loops character animation through specific states
     if (this->animationTimer.getElapsedTime().asSeconds() >= 0.3f || this->getAnimSwitch()){
-        this->current++;
-        if (this->current < begin || this->current >= end)
-            this->current = begin;
+        this->currentIndex++;
+        if (this->currentIndex < begin || this->currentIndex >= end)
+            this->currentIndex = begin;
 
         this->animationTimer.restart();
         this->loadTexture();
@@ -95,13 +114,9 @@ Character::Character(int characterId, int gunId, float x, float y) {
     this->character.setPosition(x, y);
     this->initVars();
 
-    initCharTexture(characterId);
-
-    initGunTexture(gunId);
-}
-
-Character::~Character() {
-    std::cout << "WRKD\n";
+    this->initCharTexture(characterId);
+    this->initGunTexture(gunId);
+    this->initHPBar();
 }
 
 // Accessors
@@ -117,8 +132,12 @@ sf::Texture Character::getBulletTexture() const &{
     return bulletTexture;
 }
 
-int Character::getHealth() const &{
-    return health;
+int Character::getHP() const &{
+    return HP;
+}
+
+int Character::getMaxHP() const &{
+    return HPMax;
 }
 
 bool Character::getAnimSwitch() {
@@ -184,6 +203,15 @@ void Character::updateAnimations() {
     }
 }
 
+void Character::updateHPBar() {
+    this->HPOutline.setPosition(this->character.getPosition() - sf::Vector2f (0.f, 20.f));
+    this->HPBar.setPosition(this->character.getPosition() - sf::Vector2f (0.f, 20.f));
+
+    float metric = this->character.getGlobalBounds().width / this->HPMax;
+    float healthSize = metric * HP;
+    this->HPBar.setSize(sf::Vector2f (healthSize, 10.f));
+}
+
 void Character::updateGun(sf::Vector2f target) {
     this->gun.setPosition(this->character.getGlobalBounds().left,this->character.getGlobalBounds().top);
 
@@ -229,23 +257,19 @@ void Character::fireGun(std::vector<sf::Sprite> *bullets) {
     bullets->push_back(bullet);
 }
 
-void Character::bulletCollision(std::vector<sf::Sprite> *bullets) {
-    auto itr = bullets->begin();
-
-    for (itr; itr < bullets->end(); itr++){
-        if ((*itr).getGlobalBounds().intersects(this->character.getGlobalBounds())){
-            bullets->erase(itr);
-        }
-    }
-}
-
 void Character::updateStats(int healthUp, int damageUp) {
-    health += healthUp;
+    HP += healthUp;
     damage += damageUp;
 }
 
 void Character::render(sf::RenderTarget *target) {
     target->draw(this->character);
     target->draw(this->shadow);
+    target->draw(this->HPOutline);
+    target->draw(this->HPBar);
     target->draw(this->gun);
+}
+
+void Character::mapRender(sf::RenderTarget *target) {
+    target->draw(this->character);
 }

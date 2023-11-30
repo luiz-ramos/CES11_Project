@@ -22,7 +22,9 @@ void Game::initGameVars() {
     this->currentLevel = 0;
     this->exit = false;
 
-    textures->reserve(5);
+    this->textures->reserve(5);
+    for (int i = 0; i < 5; i++)
+        this->wonLevels.push_back(false);
     this->enemies->reserve(5);
     this->currentEnemies->reserve(5);
 }
@@ -32,7 +34,7 @@ void Game::initEnemies() {
     this->enemies->emplace_back(0,0,0,100,600);
     this->enemies->emplace_back(0,0,0,500,600);
     this->enemies->emplace_back(0,0,0,500,100);
-    this->enemies->emplace_back(1,0,0,100,100);
+    this->enemies->emplace_back(1,0,0,300,100);
 }
 
 void Game::initWindow() {
@@ -44,8 +46,8 @@ void Game::initWindow() {
 }
 
 void Game::initTextures() {
-    levelBackground.loadFromFile("../../src/sprites/mapaResenha.jpg");
-    worldBackground.loadFromFile("../../src/sprites/mapa.jpg");
+    levelBackground.loadFromFile("../../src/sprites/map/mapaResenha.jpg");
+    worldBackground.loadFromFile("../../src/sprites/map/mapa.jpg");
     background.setTexture(levelBackground);
 
     outline.setOutlineColor(sf::Color::White);
@@ -117,15 +119,19 @@ void Game::initShapes() {
 void Game::reset() {
     this->exit = false;
 
-    while (!this->playerBullets->empty())
-        this->playerBullets->pop_back();
-    while (!this->enemyBullets->empty())
-        this->enemyBullets->pop_back();
+    this->resetBullets();
     while (!this->uiShapes->empty())
         this->uiShapes->pop_back();
 
     choice1 = false;
     choice2 = false;
+}
+
+void Game::resetBullets() {
+    while (!this->playerBullets->empty())
+        this->playerBullets->pop_back();
+    while (!this->enemyBullets->empty())
+        this->enemyBullets->pop_back();
 }
 
 template <typename T>
@@ -172,7 +178,7 @@ void Game::walk(int targetLevel) {
 
             this->window->draw(background);
             this->renderVector(uiSprites);
-            this->player->render(this->window);
+            this->player->mapRender(this->window);
 
             this->window->display();
         };
@@ -206,7 +212,7 @@ void Game::updateBullets() {
         for (itr2; itr2 < this->currentEnemies->end(); itr2++)
             if ((*itr).getGlobalBounds().intersects((*itr2).getCharacter().getGlobalBounds())){
                 this->playerBullets->erase(itr);
-                (*itr2).updateStats(-1,0);
+                (*itr2).updateStats(-1);
             }
 
         float xUp = this->window->getSize().x;
@@ -291,34 +297,24 @@ void Game::initExit() {
 }
 
 void Game::switchToMap() {
+    // Casual procedure for going to the map game state
+    int playerMapPos = this->levelToPos(this->currentLevel);
     float width = this->player->getCharacter().getGlobalBounds().width;
     float height = this->player->getCharacter().getGlobalBounds().height;
     sf::Vector2f adjust = sf::Vector2f {width/2, height};
+
     background.setTexture(worldBackground);
+    this->resetBullets();
 
-    switch (this->currentLevel){
-        case 0:
-            this->player->changePos(this->nodesPos->at(0) - adjust);
-            break;
-        case 1:
-            this->player->changePos(this->nodesPos->at(9) - adjust);
-            break;
-        case 2:
-            this->player->changePos(this->nodesPos->at(12) - adjust);
-            break;
-        case 3:
-            this->player->changePos(this->nodesPos->at(15) - adjust);
-            break;
-        case 4:
-            this->player->changePos(this->nodesPos->at(19) - adjust);
-            break;
-    }
-
+    // Player modification
+    this->player->updateStats(this->player->getMaxHP() - this->player->getHP());
     this->player->changeSpeed(2.f);
+    this->player->changePos(this->nodesPos->at(playerMapPos) - adjust);
     this->statsTree->value = 1;
 }
 
 int Game::levelToPos(int level) {
+    // Returns the position of a level node in the graph
     switch (level){
         case 0:
             return 0;
@@ -331,13 +327,15 @@ int Game::levelToPos(int level) {
         case 4:
             return 19;
         default:
-            std::cout << "ERROR ";
-            std::cout << this->uiShapes->size() << ' ' << this->currentLevel;
             break;
     }
+
+    // Default value
+    return -1;
 }
 
 void Game::save() {
+    // Saves game state into .txt files
     std::ofstream file;
     file.open("../../src/saves/save.txt", std::ios::out);
     printTree(statsTree, file);
@@ -345,6 +343,7 @@ void Game::save() {
 }
 
 void Game::displayChars(std::string path, int scale) {
+    // Displays sprite elements to choose from
     int run = 0;
 
     for (const auto &entry : std::filesystem::directory_iterator(path)){
@@ -360,7 +359,7 @@ void Game::displayChars(std::string path, int scale) {
     }
 
     for (int i = 0; i < this->uiSprites->size(); i++){
-        this->uiSprites->at(i).setPosition(160 + 240 * i, 250);
+        this->uiSprites->at(i).setPosition(160.f + 240.f * i, 250.f);
         this->uiSprites->at(i).setScale(scale, scale);
         this->window->draw(this->uiSprites->at(i));
     }
@@ -371,27 +370,34 @@ void Game::pollEvents() {
     while (this->window->pollEvent(this->ev)){
         switch (this->ev.type) {
             case sf::Event::Closed:
+                // Closes window
                 this->window->close();
+
                 break;
             case sf::Event::KeyPressed:
                 if (this->ev.key.code == sf::Keyboard::Escape) {
+                    // Goes to exit window menu
                     exit = true;
                     initExit();
                 }
                 if (this->ev.key.code == sf::Keyboard::Enter){
                     switch (this->statsTree->value){
                         case 1:
+                            // Enters a level
                             this->statsTree->value = 2;
                             this->background.setTexture(levelBackground);
                             this->player->changeSpeed(3.f);
                             this->updateCurrentEnemies();
+
                             break;
                     }
                 }
+
                 break;
             case sf::Event::MouseButtonReleased:
                 switch (statsTree->value) {
                     case 2:
+                        // If key is released, character should change animation immediately
                         if (this->ev.key.code == sf::Keyboard::A || this->ev.key.code == sf::Keyboard::Left ||
                             this->ev.key.code == sf::Keyboard::W || this->ev.key.code == sf::Keyboard::Up   ||
                             this->ev.key.code == sf::Keyboard::S || this->ev.key.code == sf::Keyboard::Down ||
@@ -409,29 +415,37 @@ void Game::pollEvents() {
                             // Menu
                             switch (pollUiChoices()){
                                 case 0:
+                                    // If new game is chosen, goes to character creation menu
                                     this->statsTree->value = 0;
                                     this->displayChars("../../src/sprites/characters/mugshots", 1);
                                     this->text.setString("CHOOSE YOUR CHARACTER");
+
                                     break;
                                 case 1:
+                                    // Loads game from .txt file
                                     deleteTree(statsTree);
                                     std::ifstream file;
                                     file.open("../../src/saves/save.txt", std::ios::in);
                                     this->statsTree = read(file);
                                     file.close();
 
+                                    // Player constructor and switches to map
                                     this->player = new Player(this->statsTree->lChild->value,
                                                               this->statsTree->rChild->value,
                                                               364, 364);
                                     this->background.setTexture(levelBackground);
                                     this->switchToMap();
                                     this->initShapes();
+
                                     break;
                             }
+
                             break;
                         case 0:
                             // Character creation
                             this->pollCharacterChoice();
+
+                            // Switches to map if both choices have been made
                             if (choice1 && choice2){
                                 this->player = new Player(this->statsTree->lChild->value,
                                                           this->statsTree->rChild->value,
@@ -443,13 +457,33 @@ void Game::pollEvents() {
                             break;
                         case 1:
                             // Map navigation
-                            this->pollMapChoice();
+                            if (!exit)
+                                this->pollMapChoice();
+
+                            // Polling exit window
+                            else {
+                                switch (pollUiChoices()){
+                                    case 0:
+                                        this->statsTree->value = 1;
+                                        this->save();
+                                        this->statsTree->value = -1;
+                                        this->initMenu();
+                                        this->reset();
+                                    case 1:
+                                        this->statsTree->value = -1;
+                                        this->initMenu();
+                                        this->reset();
+                                        break;
+                                }
+                            }
 
                             break;
                         case 2:
                             // Level
                             if (!exit)
                                 this->player->fireGun(playerBullets);
+
+                            // Polling exit window
                             else {
                                 switch (pollUiChoices()){
                                     case 0:
@@ -484,7 +518,8 @@ int Game::pollUiChoices() {
         }
     }
 
-    return 5;
+    // Default value
+    return -1;
 }
 
 void Game::pollMapChoice() {
@@ -496,7 +531,9 @@ void Game::pollMapChoice() {
 }
 
 void Game::pollCharacterChoice() {
+    // Checks if a choice has been made
     int choice = 0;
+
     auto itr = uiSprites->begin();
 
     for (itr; itr < uiSprites->end(); itr++) {
@@ -511,6 +548,7 @@ void Game::pollCharacterChoice() {
                 statsTree->rChild = new Tree{choice, nullptr};
             }
 
+            // Resets UI elements used for the next choice
             while (!textures->empty())
                 textures->pop_back();
             while (!uiSprites->empty())
@@ -552,32 +590,37 @@ bool Game::running() const &{
 }
 
 // Functions
-
 void Game::updateGame() {
     this->pollEvents();
     this->updateMousePos();
 
     switch (statsTree->value){
         case -1:
+            // Checks if mouse is hovering over UI elements
             this->updateOutline <std::vector<sf::Text>> (this->uiTexts);
 
             break;
         case 0:
+            // Checks if mouse is hovering over UI elements
             this->updateOutline <std::vector<sf::Sprite>> (this->uiSprites);
 
             break;
         case 1:
+            // Update character animations
             this->player->updateAnimations();
-            this->player->updateGun(this->mousePosView);
 
             break;
         case 2:
+            // If exit screen is up, does not update
             if (!exit){
+                // Updates bullets (duh)
                 this->updateBullets();
 
+                // Removes enemies from vector if dead
                 for (int i = 0; i < this->currentEnemies->size(); i++){
                     this->currentEnemies->at(i).updateEnemy(this->player->getCharacter().getPosition(), enemyBullets);
-                    if (this->currentEnemies->at(i).getHealth() <= 0) {
+
+                    if (this->currentEnemies->at(i).getHP() <= 0) {
                         Enemy swapEnemy = Enemy(this->currentEnemies->back().getEnemyLevel(),
                                                 this->currentEnemies->back().getCharacterId(),
                                                 this->currentEnemies->back().getGunId(),
@@ -589,10 +632,15 @@ void Game::updateGame() {
                     }
                 }
 
+                // Update Player
                 this->player->update(this->window, mousePosView);
 
-                if (this->currentEnemies->empty())
+                // Check if level is completed
+                if (this->currentEnemies->empty()) {
                     this->switchToMap();
+                    this->wonLevels[this->currentLevel] = true;
+                    this->uiShapes->at(this->currentLevel).setFillColor(sf::Color::Green);
+                }
             }
             break;
     }
@@ -605,6 +653,7 @@ void Game::renderGame() {
         case -1:
             // Render UI features
             this->renderVector <std::vector<sf::Text>> (uiTexts);
+
             break;
         case 0:
             // Render UI features
@@ -621,7 +670,13 @@ void Game::renderGame() {
             this->renderVector <std::vector<sf::CircleShape>> (uiShapes);
 
             // Draw player
-            this->player->render(this->window);
+            this->player->mapRender(this->window);
+
+            // Exit window
+            if (exit){
+                this->window->draw(text);
+                this->renderVector <std::vector<sf::Text>>(uiTexts);
+            }
 
             break;
         case 2:
@@ -639,6 +694,7 @@ void Game::renderGame() {
             this->renderVector(playerBullets);
             this->renderVector(enemyBullets);
 
+            // Exit window
             if (exit){
                 this->window->draw(text);
                 this->renderVector <std::vector<sf::Text>>(uiTexts);
