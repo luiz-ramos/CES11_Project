@@ -32,6 +32,7 @@ private:
     // Levels
     std::vector<sf::Vector2f> * nodesPos;
     GameMap * gameMap;
+    std::vector<bool> wonLevels;
     std::vector<Enemy> * enemies;
     int currentLevel;
 
@@ -73,13 +74,13 @@ private:
 
     // Update functions
     void reset();
+    void resetBullets();
     template <typename T>
     void updateOutline(T * objectsVector);
     void walk(int targetLevel);
     void updateCurrentEnemies();
     void updateMousePos();
     void updateBullets();
-    bool updateBulletCollisions(sf::Sprite * bullet);
 
     // Render functions
     template <typename T>
