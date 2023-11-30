@@ -10,7 +10,7 @@ FetchContent_Declare(SFML
     GIT_TAG 2.6.x)
 FetchContent_MakeAvailable(SFML)
 
-add_executable(AirportIncursion src/main.cpp src/Game.cpp src/Game.hpp src/Game.hpp
+add_executable(CityRaid src/main.cpp src/Game.cpp src/Game.hpp src/Game.hpp
         src/Player.cpp
         src/Player.cpp
         src/Enemy.h
@@ -21,15 +21,15 @@ add_executable(AirportIncursion src/main.cpp src/Game.cpp src/Game.hpp src/Game.
         src/Tree.cpp
         src/Graph.cpp
 )
-target_link_libraries(AirportIncursion PRIVATE sfml-graphics)
-target_compile_features(AirportIncursion PRIVATE cxx_std_17)
+target_link_libraries(CityRaid PRIVATE sfml-graphics)
+target_compile_features(CityRaid PRIVATE cxx_std_17)
 
 if(WIN32)
     add_custom_command(
-        TARGET AirportIncursion
+        TARGET CityRaid
         COMMENT "Copy OpenAL DLL"
-        PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SFML_SOURCE_DIR}/extlibs/bin/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x64,x86>/openal32.dll $<TARGET_FILE_DIR:AirportIncursion>
+        PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SFML_SOURCE_DIR}/extlibs/bin/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x64,x86>/openal32.dll $<TARGET_FILE_DIR:CityRaid>
         VERBATIM)
 endif()
 
-install(TARGETS AirportIncursion)
+install(TARGETS CityRaid)

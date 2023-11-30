@@ -38,6 +38,9 @@ protected:
     sf::Sprite gun;
     sf::Texture gunTexture;
     sf::Texture bulletTexture;
+//    sf::SoundBuffer gunSoundBuffer;
+//    sf::Sound gunSound;
+
 
     // HP related
     int HPMax;
@@ -51,6 +54,7 @@ protected:
     void initVars();
     void initCharTexture(int charId);
     void initGunTexture(int GunId);
+    void initGunSound(int GunId);
     void initHPBar();
     void flipSprite();
     void unFlipSprite();
@@ -73,7 +77,9 @@ public:
     void resetAnimationTimer();
     void updateAnimations();
     void updateHPBar();
-    void updateStats(int healthUp = 0, int damageUp = 0);
+    void cure();
+    void receiveDamage(int dmg);
+    void upgrade(int HPUp = 0, int damageUp = 0);
     void updateGun(sf::Vector2f target);
     void fireGun(std::vector<sf::Sprite> * bullets);
     void render(sf::RenderTarget * target);

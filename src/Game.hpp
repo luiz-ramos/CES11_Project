@@ -54,6 +54,7 @@ private:
     std::vector<sf::Sprite> * enemyBullets;
 
     // Textures
+    sf::Texture menuBackground;
     sf::Texture worldBackground;
     sf::Texture levelBackground;
     std::vector<sf::Texture> * textures;

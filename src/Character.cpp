@@ -17,13 +17,18 @@ void Character::initVars() {
 }
 
 void Character::initCharTexture(int charId) {
-    int run = 0;
     std::string path;
 
-    for (const auto &entry : std::filesystem::directory_iterator("../../src/sprites/characters")){
-        if (run == charId)
-            path = entry.path().string();
-        run++;
+    switch (charId){
+        case 0:
+            path = "../../src/sprites/characters/convict";
+            break;
+        case 1:
+            path = "../../src/sprites/characters/marine";
+            break;
+        case 2:
+            path = "../../src/sprites/characters/slinger";
+            break;
     }
 
     for (const auto &entry : std::filesystem::directory_iterator(path)){
@@ -64,6 +69,19 @@ void Character::initGunTexture(int GunId) {
 
         run++;
     }
+}
+
+void Character::initGunSound(int GunId) {
+//    int run = 0;
+//    std::string path;
+//
+//    for (const auto &entry : std::filesystem::directory_iterator("../../src/sounds/guns")){
+//        if (run == GunId){
+//            this->gunSoundBuffer.loadFromFile(entry.path().string());
+//            this->gunSound.setBuffer(this->gunSoundBuffer);
+//        }
+//        run++;
+//    }
 }
 
 void Character::initHPBar() {
@@ -116,6 +134,7 @@ Character::Character(int characterId, int gunId, float x, float y) {
 
     this->initCharTexture(characterId);
     this->initGunTexture(gunId);
+    this->initGunSound(gunId);
     this->initHPBar();
 }
 
@@ -254,12 +273,21 @@ void Character::fireGun(std::vector<sf::Sprite> *bullets) {
     angle = angle * PI/180;
     bullet.move(60 * cos(angle), 60 * sin(angle));
 
+//    this->gunSound.play();
     bullets->push_back(bullet);
 }
 
-void Character::updateStats(int healthUp, int damageUp) {
-    HP += healthUp;
-    damage += damageUp;
+void Character::cure() {
+    this->HP = this->HPMax;
+}
+
+void Character::receiveDamage(int dmg) {
+    this->HP -= dmg;
+}
+
+void Character::upgrade(int HPUp, int damageUp) {
+    this->HPMax += HPUp;
+    this->damage += damageUp;
 }
 
 void Character::render(sf::RenderTarget *target) {

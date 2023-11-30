@@ -30,25 +30,35 @@ void Game::initGameVars() {
 }
 
 void Game::initEnemies() {
-    this->enemies->emplace_back(0,0,0,100,100);
-    this->enemies->emplace_back(0,0,0,100,600);
-    this->enemies->emplace_back(0,0,0,500,600);
-    this->enemies->emplace_back(0,0,0,500,100);
-    this->enemies->emplace_back(1,0,0,300,100);
+    // Level 1
+    this->enemies->emplace_back(0,2,0,100,100);
+
+    // Level 2
+    this->enemies->emplace_back(0,2,0,100,600);
+
+    // Level 3
+    this->enemies->emplace_back(0,2,0,500,600);
+
+    // Level 4
+    this->enemies->emplace_back(0,2,0,500,100);
+
+    // Level 5
+    this->enemies->emplace_back(1,2,0,300,100);
 }
 
 void Game::initWindow() {
     this->videoMode.height = 728;
     this->videoMode.width = 728;
 
-    this->window = new sf::RenderWindow(this->videoMode, "AirportIncursion", sf::Style::Titlebar | sf::Style::Close);
+    this->window = new sf::RenderWindow(this->videoMode, "CityRaid", sf::Style::Titlebar | sf::Style::Close);
     this->window->setFramerateLimit(144);
 }
 
 void Game::initTextures() {
+    menuBackground.loadFromFile("../../src/sprites/menu/menu.jpeg");
     levelBackground.loadFromFile("../../src/sprites/map/mapaResenha.jpg");
     worldBackground.loadFromFile("../../src/sprites/map/mapa.jpg");
-    background.setTexture(levelBackground);
+    background.setTexture(menuBackground);
 
     outline.setOutlineColor(sf::Color::White);
     outline.setFillColor(sf::Color::Transparent);
@@ -247,7 +257,7 @@ void Game::updateBullets() {
         for (itr2; itr2 < this->currentEnemies->end(); itr2++)
             if ((*itr).getGlobalBounds().intersects((*itr2).getCharacter().getGlobalBounds())){
                 this->playerBullets->erase(itr);
-                (*itr2).updateStats(-1);
+                (*itr2).receiveDamage(1);
             }
 
         float xUp = this->window->getSize().x;
@@ -271,7 +281,7 @@ void Game::updateBullets() {
         // Checks collision with player
         if ((*itr).getGlobalBounds().intersects(this->player->getCharacter().getGlobalBounds())){
             this->enemyBullets->erase(itr);
-            this->player->updateStats(-1,0);
+            this->player->receiveDamage(1);
         }
 
         float xUp = this->window->getSize().x;
@@ -345,7 +355,7 @@ void Game::switchToMap() {
     this->resetBullets();
 
     // Player modification
-    this->player->updateStats(this->player->getMaxHP() - this->player->getHP());
+    this->player->cure();
     this->player->changeSpeed(2.f);
     this->player->changePos(this->nodesPos->at(playerMapPos) - adjust);
     this->statsTree->value = 1;
@@ -428,18 +438,26 @@ void Game::pollEvents() {
                 break;
             case sf::Event::KeyPressed:
                 if (this->ev.key.code == sf::Keyboard::Escape) {
-                    // Goes to exit window menu
-                    exit = true;
-                    initExit();
+                    // Goes into the exit window menu
+                    if (!this->exit){
+                        this->exit = true;
+                        this->initExit();
+                    }
+
+                    // Goes out of the exit window
+                    else
+                        this->exit = false;
                 }
                 if (this->ev.key.code == sf::Keyboard::Enter){
                     switch (this->statsTree->value){
                         case 1:
-                            // Enters a level
-                            this->statsTree->value = 2;
-                            this->background.setTexture(levelBackground);
-                            this->player->changeSpeed(3.f);
-                            this->updateCurrentEnemies();
+                            // Enters a level if not completed yet
+                            if (!this->wonLevels[this->currentLevel]){
+                                this->statsTree->value = 2;
+                                this->background.setTexture(levelBackground);
+                                this->player->changeSpeed(3.f);
+                                this->updateCurrentEnemies();
+                            }
 
                             break;
                     }
@@ -488,7 +506,6 @@ void Game::pollEvents() {
                                     for (int i = 0; i < this->wonLevels.size(); i++){
                                         int read;
                                         file >> read;
-                                        std::cout << read << '\n';
                                         this->wonLevels[i] = read;
                                     }
                                     file >> this->currentLevel;
@@ -703,6 +720,11 @@ void Game::updateGame() {
                 // Update Player
                 this->player->update(this->window, mousePosView);
 
+                // Check Player Death
+                if (this->player->getHP() <= 0){
+                    this->switchToMap();
+                }
+
                 // Check if level is completed
                 if (this->currentEnemies->empty()) {
                     this->switchToMap();
@@ -715,6 +737,9 @@ void Game::updateGame() {
 
 void Game::renderGame() {
     this->window->clear();
+
+    // Draw background
+    this->window->draw(this->background);
 
     switch (this->statsTree->value) {
         case -1:
@@ -730,9 +755,6 @@ void Game::renderGame() {
 
             break;
         case 1:
-            // Draw background
-            this->window->draw(this->background);
-
             // Draw UI elements;
             this->renderVector <std::vector<sf::CircleShape>> (this->uiShapes);
 
@@ -747,9 +769,6 @@ void Game::renderGame() {
 
             break;
         case 2:
-            // Draw background
-            this->window->draw(this->background);
-
             // Draw player
             this->player->render(this->window);
 
