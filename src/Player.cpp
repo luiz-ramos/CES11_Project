@@ -9,6 +9,7 @@
 // Constructors and Destructors
 Player::Player(int playerID, int gunId, float x, float y) : Character(playerID, gunId, x, y){
     movementSpeed = 3.f;
+    this->upgrade(5);
     this->animationTimer.restart();
 }
 
@@ -35,6 +36,7 @@ void Player::changeSpeed(float newSpeed) {
 }
 
 void Player::moveTowards(sf::Vector2f targetPos) {
+    // Move towards a target position
     float x = targetPos.x - this->character.getPosition().x;
     float y = targetPos.y - this->character.getPosition().y;
 
@@ -150,8 +152,6 @@ void Player::updateCollisions(const sf::RenderTarget * target) {
 
     else if (playerBounds.left + playerBounds.width >= target->getSize().x - 45.f)
         this->character.setPosition(target->getSize().x - playerBounds.width - 45.f, playerBounds.top);
-
-
 }
 
 void Player::update(const sf::RenderWindow * target, sf::Vector2f gunTarget) {
