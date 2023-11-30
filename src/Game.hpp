@@ -77,6 +77,7 @@ private:
     void resetBullets();
     template <typename T>
     void updateOutline(T * objectsVector);
+    void updateUIShapes();
     void walk(int targetLevel);
     void updateCurrentEnemies();
     void updateMousePos();
