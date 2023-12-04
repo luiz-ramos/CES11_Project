@@ -14,6 +14,7 @@ protected:
     // Protected functions
     std::vector<int> getPath(std::vector<int> const&, int);
     void insertEdge(sf::Vector2f, sf::Vector2f, int, int);
+    void readGraph(std::string);
 public:
     // Constructors and destructors
     Graph(std::size_t);

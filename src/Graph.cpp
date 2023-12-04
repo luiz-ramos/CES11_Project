@@ -27,6 +27,26 @@ std::vector<int> Graph::getPath(std::vector<int> const &parent, int j) {
     reverse(path.begin(), path.end());
     return path;
 }
+void Graph::readGraph(std::string file) {
+    std::ifstream fileIn;
+    std::vector<sf::Vector2f> coordenates(22);
+    int nEdge, from, to;
+
+    fileIn.open(file);
+
+    for (int i = 0; i<20 ; i++) {
+        fileIn >> coordenates[i].x >> coordenates[i].y;
+    }
+
+    fileIn >> nEdge;
+
+    for(int i = 0; i < nEdge; i++) {
+        fileIn >> from >> to;
+        insertEdge(coordenates[from - 1], coordenates[to - 1], from, to);
+    }
+
+    fileIn.close();
+}
 
 // Functions
 std::vector<int> Graph::dijkstra(int src, int end) {
@@ -62,29 +82,8 @@ std::vector<int> Graph::dijkstra(int src, int end) {
 }
 
 // Game map constructor
-GameMap::GameMap() : Graph(21) {
-    sf::Vector2f v1(612, 567), v2(431, 567), v3(431, 541), v4(335, 541), v5(335, 420), v6(298, 420), v7(298, 442), v8(400, 420), v9(400, 302), v10(494, 302), v11(400, 229), v12(340, 229), v13(340, 160), v14(300, 229), v15(212, 229), v16(212, 94),v17(172, 229), v18(172, 320),v19(128, 320),v20(128, 442);
-    this->insertEdge(v1, v2, 1, 2);
-    this->insertEdge(v2, v3, 2, 3);
-    this->insertEdge(v3, v4, 3, 4);
-    this->insertEdge(v4, v5, 4, 5);
-    this->insertEdge(v8, v5, 8, 5);
-    this->insertEdge(v5, v6, 5, 6);
-    this->insertEdge(v7, v6, 7, 6);
-    this->insertEdge(v9, v8, 9, 8);
-    this->insertEdge(v10, v9, 10, 9);
-    this->insertEdge(v11, v9, 11, 9);
-    this->insertEdge(v11, v12, 11, 12);
-    this->insertEdge(v13, v12, 13, 12);
-    this->insertEdge(v14, v12, 14, 12);
-    this->insertEdge(v14, v15, 14, 15);
-    this->insertEdge(v14, v6, 14, 6);
-    this->insertEdge(v16, v15, 16, 15);
-    this->insertEdge(v17, v15, 17, 16);
-    this->insertEdge(v17, v18, 17, 18);
-    this->insertEdge(v19, v18, 19, 18);
-    this->insertEdge(v19, v20, 19, 20);
-    this->insertEdge(v7, v20, 7, 20);
+GameMap::GameMap() : Graph(22) {
+    readGraph("../../src/graphMaps/map.txt");
 }
 
 // Game Levels
