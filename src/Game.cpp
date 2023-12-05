@@ -590,8 +590,14 @@ void Game::pollEvents() {
                     }
 
                     // Goes out of the exit window
-                    else
+                    else{
+                        while (!this->uiTexts->empty())
+                            this->uiTexts->pop_back();
+                        while (!this->uiShapes->empty())
+                            this->uiShapes->pop_back();
                         this->exit = false;
+                    }
+
                 }
                 if (this->ev.key.code == sf::Keyboard::Enter){
                     switch (this->statsTree->value){
