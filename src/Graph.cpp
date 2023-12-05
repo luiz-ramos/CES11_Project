@@ -9,6 +9,7 @@
 
 // Constructor
 Graph::Graph(std::size_t tam) {
+    this->size = tam;
     matrix = std::vector<std::vector<int>>(tam, std::vector<int>(tam, 0));
 }
 
@@ -48,6 +49,11 @@ void Graph::readGraph(std::string file) {
     fileIn.close();
 }
 
+// Accessors
+size_t Graph::getSize() const &{
+    return size;
+}
+
 // Functions
 std::vector<int> Graph::dijkstra(int src, int end) {
     int V = matrix[0].size();
@@ -84,23 +90,4 @@ std::vector<int> Graph::dijkstra(int src, int end) {
 // Game map constructor
 GameMap::GameMap() : Graph(22) {
     readGraph("../../src/graphMaps/map.txt");
-}
-
-// Game Levels
-
-// Constructors and destructors
-GameLevels::GameLevels() {
-    this->levelsVector = new std::vector<Level>;
-    this->levelsVector->reserve(5);
-}
-
-GameLevels::~GameLevels() = default;
-
-// Accessors
-std::vector<Level> * GameLevels::getLevels() const &{
-    return levelsVector;
-}
-
-void GameLevels::addLevel(Level newLevel) {
-    this->levelsVector->push_back(newLevel);
 }

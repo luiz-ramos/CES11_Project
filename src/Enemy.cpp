@@ -15,7 +15,7 @@ void Enemy::initVars(int enemyLevel_, int characterId_, int gunId_) {
                        this->character.getGlobalBounds().top +  this->character.getGlobalBounds().height);
 }
 
-void Enemy::shootCycle(std::vector<sf::Sprite> * bullets) {
+void Enemy::shootCycle(std::vector<std::shared_ptr<sf::Sprite>> * bullets) {
     if (timer == 50 && HP > 0){
         this->fireGun(bullets);
         timer = 0;
@@ -51,6 +51,7 @@ Enemy::Enemy(int enemyLevel_, int characterId_, int gunId_,
              float x, float y) : Character(characterId_, gunId_, x, y){
 
     this->initVars(enemyLevel_, characterId_, gunId_);
+    this->upgrade(4, 1);
 }
 
 // Accessors
@@ -67,7 +68,7 @@ int Enemy::getGunId() const &{
 }
 
 // Functions
-void Enemy::updateEnemy(const sf::Vector2f playerTarget, std::vector<sf::Sprite> * enemyBullets) {
+void Enemy::updateEnemy(const sf::Vector2f playerTarget, std::vector<std::shared_ptr<sf::Sprite>> * enemyBullets) {
     // Updates the direction the enemy is facing
     this->updateEnemyDir();
 

@@ -14,6 +14,8 @@ void Character::initVars() {
     this->HPMax = 5;
     this->HP = 5;
     this->damage = 1;
+    this->bulletSpeed = 5;
+    this->characterSpeed = 3;
 }
 
 void Character::initCharTexture(int charId) {
@@ -22,9 +24,11 @@ void Character::initCharTexture(int charId) {
     switch (charId){
         case 0:
             path = "../../src/sprites/characters/convict";
+            this->upgrade(0,0,0,2);
             break;
         case 1:
             path = "../../src/sprites/characters/marine";
+            this->upgrade(4);
             break;
         case 2:
             path = "../../src/sprites/characters/slinger";
@@ -48,27 +52,28 @@ void Character::initCharTexture(int charId) {
     shadow.setScale(2,2);
 }
 
-void Character::initGunTexture(int GunId) {
+void Character::initGunTexture(int gunId) {
     int run = 0;
-    std::string path;
+    std::string path1;
+    std::string path2;
 
-    for (const auto &entry : std::filesystem::directory_iterator("../../src/sprites/gun")){
-        if (run == GunId){
-            gunTexture.loadFromFile(entry.path().string());
-            gun.setTexture(gunTexture);
-            gun.setScale(2,2);
-        }
-        run++;
+    switch (gunId){
+        case 0:
+            path1 = "../../src/sprites/gun/blaster.png";
+            path2 = "../../src/sprites/projectile/blaster.png";
+            this->upgrade(0,0,2);
+            break;
+        case 1:
+            path1 = "../../src/sprites/gun/dragunbreath.png";
+            path2 = "../../src/sprites/projectile/dragunbreath.png";
+            this->upgrade(0,1);
+            break;
     }
 
-    run = 0;
-
-    for (const auto &entry : std::filesystem::directory_iterator("../../src/sprites/projectile")){
-        if (run == GunId)
-            bulletTexture.loadFromFile(entry.path().string());
-
-        run++;
-    }
+    this->gunTexture.loadFromFile(path1);
+    this->bulletTexture.loadFromFile(path2);
+    this->gun.setTexture(gunTexture);
+    this->gun.setScale(2,2);
 }
 
 void Character::initGunSound(int GunId) {
@@ -140,23 +145,35 @@ Character::Character(int characterId, int gunId, float x, float y) {
 
 // Accessors
 sf::Sprite Character::getGun() const &{
-    return gun;
+    return this->gun;
 }
 
 sf::Sprite Character::getCharacter() const &{
-    return character;
+    return this->character;
 }
 
 sf::Texture Character::getBulletTexture() const &{
-    return bulletTexture;
+    return this->bulletTexture;
 }
 
 int Character::getHP() const &{
-    return HP;
+    return this->HP;
 }
 
 int Character::getMaxHP() const &{
-    return HPMax;
+    return this->HPMax;
+}
+
+int Character::getDamage() const &{
+    return this->damage;
+}
+
+int Character::getBulletSpeed() const &{
+    return this->bulletSpeed;
+}
+
+int Character::getCharSpeed() const &{
+    return this->characterSpeed;
 }
 
 bool Character::getAnimSwitch() {
@@ -263,15 +280,16 @@ void Character::updateGun(sf::Vector2f target) {
     this->gun.move(this->character.getGlobalBounds().width/2, 2 * this->character.getGlobalBounds().height/3);
 }
 
-void Character::fireGun(std::vector<sf::Sprite> *bullets) {
-    sf::Sprite bullet;
+void Character::fireGun(std::vector<std::shared_ptr<sf::Sprite>> * bullets) {
+    std::shared_ptr<sf::Sprite> bullet(new sf::Sprite);
     float angle = this->getGun().getRotation();
-    bullet.setTexture(this->getBulletTexture());
-    bullet.setScale(1,1);
-    bullet.setPosition(this->getGun().getPosition());
-    bullet.setRotation(angle);
+    bullet->setTexture(this->bulletTexture);
+    bullet->setScale(2,2);
+    bullet->setPosition(this->gun.getPosition());
+    bullet->setRotation(angle);
+
     angle = angle * PI/180;
-    bullet.move(60 * cos(angle), 60 * sin(angle));
+    bullet->move(60 * cos(angle), 60 * sin(angle));
 
 //    this->gunSound.play();
     bullets->push_back(bullet);
@@ -285,9 +303,11 @@ void Character::receiveDamage(int dmg) {
     this->HP -= dmg;
 }
 
-void Character::upgrade(int HPUp, int damageUp) {
+void Character::upgrade(int HPUp, int damageUp, int bulletSpeedUp, int charSpeedUp) {
     this->HPMax += HPUp;
     this->damage += damageUp;
+    this->bulletSpeed += bulletSpeedUp;
+    this->characterSpeed += charSpeedUp;
 }
 
 void Character::render(sf::RenderTarget *target) {
