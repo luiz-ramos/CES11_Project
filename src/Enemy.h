@@ -16,7 +16,7 @@ private:
 
     // Private functions
     void initVars(int enemyLevel_, int characterId_, int gunId_);
-    void shootCycle(std::vector<sf::Sprite> * bullets);
+    void shootCycle(std::vector<std::shared_ptr<sf::Sprite>> * bullets);
     void updateEnemyDir();
 public:
 
@@ -31,7 +31,7 @@ public:
     int getGunId() const&;
 
     // Functions
-    void updateEnemy(const sf::Vector2f playerTarget, std::vector<sf::Sprite> * enemyBullets);
+    void updateEnemy(const sf::Vector2f playerTarget, std::vector<std::shared_ptr<sf::Sprite>> * enemyBullets);
 };
 
 

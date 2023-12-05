@@ -19,6 +19,9 @@ public:
     // Constructors and destructors
     Graph(std::size_t);
 
+    // Accessors
+    size_t getSize() const&;
+
     // Functions
     std::vector<int> dijkstra(int, int);
 };
@@ -28,23 +31,5 @@ public:
     GameMap();
 };
 
-struct Level{
-    bool won;
-    std::vector<Enemy> enemies;
-};
-
-class GameLevels{
-private:
-    std::vector<Level> * levelsVector;
-
-public:
-    // Constructor
-    GameLevels();
-    ~GameLevels();
-
-    // Accessor
-    std::vector<Level> * getLevels() const&;
-    void addLevel(Level newLevel);
-};
 
 #endif //UNTITLED2_GRAPH_HPP

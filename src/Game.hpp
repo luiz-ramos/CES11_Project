@@ -15,8 +15,8 @@ private:
     sf::RenderWindow *window;
     sf::VideoMode videoMode;
     sf::Event ev;
-    int bulletSpeed;
     bool exit;
+    bool powerUp;
 
     // Game state
     /*
@@ -33,12 +33,12 @@ private:
     std::vector<sf::Vector2f> * nodesPos;
     GameMap * gameMap;
     std::vector<bool> wonLevels;
-    std::vector<Enemy> * enemies;
+    std::vector<std::shared_ptr<Enemy>> * enemies;
     int currentLevel;
 
     // Game Objects
     Player * player;
-    std::vector<Enemy> * currentEnemies;
+    std::vector<std::shared_ptr<Enemy>> * currentEnemies;
 
     // Mouse position
     sf::Vector2i mousePos;
@@ -48,10 +48,11 @@ private:
     sf::Sprite background;
     sf::RectangleShape outline;
     std::vector<sf::Text> * uiTexts;
-    std::vector<sf::CircleShape> * uiShapes;
+    std::vector<sf::CircleShape> * mapShapes;
+    std::vector<sf::RectangleShape> * uiShapes;
     std::vector<sf::Sprite> * uiSprites;
-    std::vector<sf::Sprite> * playerBullets;
-    std::vector<sf::Sprite> * enemyBullets;
+    std::vector<std::shared_ptr<sf::Sprite>> * playerBullets;
+    std::vector<std::shared_ptr<sf::Sprite>> * enemyBullets;
 
     // Textures
     sf::Texture menuBackground;
@@ -61,7 +62,6 @@ private:
 
     // Text specific
     sf::Font font;
-    sf::Text text;
 
     // Initializers
     void initGameVars();
@@ -71,7 +71,7 @@ private:
     void initFont();
     void initTree();
     void initNodesPos();
-    void initShapes();
+    void initMapShapes();
 
     // Update functions
     void reset();
@@ -87,13 +87,16 @@ private:
     // Render functions
     template <typename T>
     void renderVector(T * objectsVector);
+    void renderSprites(std::vector<std::shared_ptr<sf::Sprite>> * spriteVector);
 
     // UI related
     void initMenu();
     void initExit();
+    void initPowerUp();
     void switchToMap();
     int levelToPos(int level);
     void save();
+    void load();
     void displayChars(std::string path, int scale);
 
     // Polling
