@@ -26,7 +26,7 @@
     ```
     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
     cmake --build build
-    mv .\build\bin\Release\CityRaid.exe .\Release
+    mv .\build\bin\Release\CityRaid.exe .\build\Release
     ```
 
     For a multi-configuration generator (typically the case on Windows):
